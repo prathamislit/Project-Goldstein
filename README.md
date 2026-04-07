@@ -68,7 +68,7 @@ The model engine (`garch_model.py`, `scorer.py`) is not included in this public 
 ## Installation
 
 ```bash
-git clone https://github.com/[your-handle]/project-goldstein
+git clone https://github.com/prathamislit/Project-Goldstein
 cd project-goldstein
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
