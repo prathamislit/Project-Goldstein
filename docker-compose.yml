@@ -1,0 +1,40 @@
+version: "3.9"
+
+# ── Project Goldstein — Docker Compose ───────────────────────────────────────
+# Local dev: docker compose up
+# Run pipeline only: docker compose run --rm pipeline
+# Dashboard only: docker compose up dashboard
+
+services:
+
+  # ── Pipeline ────────────────────────────────────────────────────────────────
+  # Runs all regions sequentially and exits. Run manually or via cron.
+  pipeline:
+    build: .
+    command: bash Run_All_regions.sh
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+      - ./gcp_key.json:/app/gcp_key.json:ro
+    env_file: .env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp_key.json
+
+  # ── Dashboard ───────────────────────────────────────────────────────────────
+  # Always-on web server. Reads CSVs written by pipeline.
+  dashboard:
+    build: .
+    command: python3 dashboard.py
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
