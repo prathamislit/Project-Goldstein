@@ -35,3 +35,5 @@ venv/
 data/
 logs/
 outputs/*.csv
+scorer.py
+garch_model.py
