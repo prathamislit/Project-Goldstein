@@ -9,6 +9,23 @@ cd ~/Desktop/goldstein
 source venv/bin/activate
 mkdir -p logs outputs data
 
+# Incremental mode: pass --incremental to only fetch last 14 days
+# Full history (default): fetches from START_DATE in config.py (2022-01-01)
+INCREMENTAL=0
+for arg in "$@"; do
+    if [ "$arg" = "--incremental" ]; then
+        INCREMENTAL=1
+    fi
+done
+
+if [ $INCREMENTAL -eq 1 ]; then
+    INCREMENTAL_START=$(date -v-14d +%Y-%m-%d 2>/dev/null || date -d "14 days ago" +%Y-%m-%d)
+    export START_DATE=$INCREMENTAL_START
+    echo "INCREMENTAL mode: fetching $START_DATE to today (~$0.12 BigQuery cost)" | tee -a logs/pipeline.log
+else
+    echo "FULL mode: fetching from 2022-01-01 (~$6 BigQuery cost)" | tee -a logs/pipeline.log
+fi
+
 echo "═══════════════════════════════════════════════════" | tee -a logs/pipeline.log
 echo "ALL-REGIONS run started: $(date)"                    | tee -a logs/pipeline.log
 echo "═══════════════════════════════════════════════════" | tee -a logs/pipeline.log
