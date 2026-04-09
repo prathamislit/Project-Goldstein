@@ -150,6 +150,27 @@ def build_master_dataset(save: bool = True) -> pd.DataFrame:
     print(f"[preprocessor] Date range: {df['date'].min().date()} → {df['date'].max().date()}")
     print(f"[preprocessor] Decoupled days: {df['decoupled_flag'].sum() if 'decoupled_flag' in df.columns else 'N/A'}")
 
+    # ── Merge with existing master history (incremental mode preservation) ──────
+    # If a master file already exists, concat and deduplicate so that
+    # full history is always preserved. New rows overwrite old rows for
+    # the same date (keeps the freshest data).
+    if os.path.exists(config.MASTER_FILE):
+        try:
+            existing = pd.read_csv(config.MASTER_FILE, parse_dates=["date"])
+            # Only keep existing rows that are OLDER than what we just fetched
+            # (new data wins for overlapping dates)
+            new_min_date = df["date"].min()
+            existing_prior = existing[existing["date"] < new_min_date]
+            if len(existing_prior) > 0:
+                # Align columns: use union, fill missing with NaN
+                df = pd.concat([existing_prior, df], ignore_index=True)
+                df = df.sort_values("date").reset_index(drop=True)
+                print(f"[preprocessor] Merged with existing history: "
+                      f"{len(existing_prior)} prior rows + {len(df) - len(existing_prior)} new rows "
+                      f"= {len(df)} total rows")
+        except Exception as e:
+            print(f"[preprocessor] WARNING: Could not merge with existing master: {e}")
+
     if save:
         os.makedirs(config.DATA_DIR, exist_ok=True)
         df.to_csv(config.MASTER_FILE, index=False)
