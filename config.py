@@ -21,7 +21,7 @@ if not GCP_PROJECT_ID:
 # ─── Date Range ──────────────────────────────────────────────────────────────
 # 2022-present: covers Ukraine invasion, Gaza escalation cycle, post-COVID regime
 START_DATE = os.getenv("START_DATE", "2022-01-01")
-END_DATE   = os.getenv("END_DATE", datetime.today().strftime("%Y-%m-%d"))
+END_DATE   = os.getenv("END_DATE", (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d"))
 
 # ─── Region & Sector Mapping ─────────────────────────────────────────────────
 # Add new regions here — the rest of the pipeline reads from this dict.
