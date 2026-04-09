@@ -150,26 +150,23 @@ def build_master_dataset(save: bool = True) -> pd.DataFrame:
     print(f"[preprocessor] Date range: {df['date'].min().date()} → {df['date'].max().date()}")
     print(f"[preprocessor] Decoupled days: {df['decoupled_flag'].sum() if 'decoupled_flag' in df.columns else 'N/A'}")
 
-    # ── Merge with existing master history (incremental mode preservation) ──────
-    # If a master file already exists, concat and deduplicate so that
-    # full history is always preserved. New rows overwrite old rows for
-    # the same date (keeps the freshest data).
-    if os.path.exists(config.MASTER_FILE):
+    # ── Merge with REGION-SPECIFIC master history (incremental mode preservation) ─
+    # CRITICAL: use the region-specific master file, NOT the shared master_dataset_clean.csv
+    # The shared file gets overwritten by each region sequentially and would
+    # contaminate one region's history with another region's data.
+    region_master = f"{config.DATA_DIR}/master_dataset_clean_{config.ACTIVE_REGION}.csv"
+    if os.path.exists(region_master):
         try:
-            existing = pd.read_csv(config.MASTER_FILE, parse_dates=["date"])
-            # Only keep existing rows that are OLDER than what we just fetched
-            # (new data wins for overlapping dates)
+            existing = pd.read_csv(region_master, parse_dates=["date"])
             new_min_date = df["date"].min()
             existing_prior = existing[existing["date"] < new_min_date]
             if len(existing_prior) > 0:
-                # Align columns: use union, fill missing with NaN
                 df = pd.concat([existing_prior, df], ignore_index=True)
                 df = df.sort_values("date").reset_index(drop=True)
-                print(f"[preprocessor] Merged with existing history: "
-                      f"{len(existing_prior)} prior rows + {len(df) - len(existing_prior)} new rows "
-                      f"= {len(df)} total rows")
+                print(f"[preprocessor] Merged {len(existing_prior)} prior rows from "
+                      f"{region_master} + {len(df) - len(existing_prior)} new = {len(df)} total")
         except Exception as e:
-            print(f"[preprocessor] WARNING: Could not merge with existing master: {e}")
+            print(f"[preprocessor] WARNING: Could not merge with region master: {e}")
 
     if save:
         os.makedirs(config.DATA_DIR, exist_ok=True)
