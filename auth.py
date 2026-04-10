@@ -12,7 +12,7 @@ Env vars:
 """
 
 import os
-import hashlib
+import hmac
 from functools import wraps
 from flask import request, session, redirect, url_for, Response
 
@@ -165,7 +165,8 @@ def register_auth(server, secret_key=None):
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             apikey   = request.form.get("apikey", "").strip()
-            if USERS.get(username) == apikey:
+            stored_key = USERS.get(username)
+            if stored_key is not None and hmac.compare_digest(stored_key, apikey):
                 session["authenticated"] = True
                 session["user"] = username
                 return redirect("/")

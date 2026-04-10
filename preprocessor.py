@@ -99,11 +99,10 @@ def flag_decoupled(df: pd.DataFrame, sector_etf: str) -> pd.DataFrame:
     )
 
     # Decoupled: correlation is weak AND VIX is anomalously elevated
+    vix_elevated = df["VIX_elevated"] if "VIX_elevated" in df.columns else pd.Series(False, index=df.index)
     df["decoupled_flag"] = (
         df["rolling_corr_30d"].abs() < 0.3
-    ) & (
-        df.get("VIX_elevated", False)
-    )
+    ) & vix_elevated.fillna(False)
 
     return df
 
@@ -140,6 +139,36 @@ def build_master_dataset(save: bool = True) -> pd.DataFrame:
     # Drop the first row (NaN log return from shift)
     df = df.dropna(subset=[f"{sector_etf}_log_return"]).reset_index(drop=True)
 
+    # ── Merge with REGION-SPECIFIC master history (incremental mode preservation) ─
+    # CRITICAL: merge BEFORE computing rolling statistics (VIX z-score, decoupled flag)
+    # because those rolling windows need the full history to produce valid results.
+    # On incremental runs (14-day window), rolling(252, min_periods=30) would
+    # produce NaN for ALL new rows if computed before the merge.
+    region_master = f"{config.DATA_DIR}/master_dataset_clean_{config.ACTIVE_REGION}.csv"
+    if os.path.exists(region_master):
+        try:
+            existing = pd.read_csv(region_master, parse_dates=["date"])
+            new_min_date = df["date"].min()
+            existing_prior = existing[existing["date"] < new_min_date]
+            if len(existing_prior) > 0:
+                new_rows_count = len(df)
+
+                # Drop rolling-computed columns from old data — they will be
+                # recomputed on the full merged dataset below
+                drop_cols = ["VIX_zscore", "VIX_elevated", "rolling_corr_30d", "decoupled_flag"]
+                existing_prior = existing_prior.drop(
+                    columns=[c for c in drop_cols if c in existing_prior.columns],
+                    errors="ignore",
+                )
+
+                df = pd.concat([existing_prior, df], ignore_index=True)
+                df = df.sort_values("date").reset_index(drop=True)
+                print(f"[preprocessor] Merged {len(existing_prior)} prior rows from "
+                      f"{region_master} + {new_rows_count} new = {len(df)} total")
+        except Exception as e:
+            print(f"[preprocessor] WARNING: Could not merge with region master: {e}")
+
+    # ── Rolling statistics computed on the FULL dataset (post-merge) ──────────
     # VIX z-score regime detection
     df = compute_vix_zscore(df)
 
@@ -150,28 +179,22 @@ def build_master_dataset(save: bool = True) -> pd.DataFrame:
     print(f"[preprocessor] Date range: {df['date'].min().date()} → {df['date'].max().date()}")
     print(f"[preprocessor] Decoupled days: {df['decoupled_flag'].sum() if 'decoupled_flag' in df.columns else 'N/A'}")
 
-    # ── Merge with REGION-SPECIFIC master history (incremental mode preservation) ─
-    # CRITICAL: use the region-specific master file, NOT the shared master_dataset_clean.csv
-    # The shared file gets overwritten by each region sequentially and would
-    # contaminate one region's history with another region's data.
-    region_master = f"{config.DATA_DIR}/master_dataset_clean_{config.ACTIVE_REGION}.csv"
-    if os.path.exists(region_master):
-        try:
-            existing = pd.read_csv(region_master, parse_dates=["date"])
-            new_min_date = df["date"].min()
-            existing_prior = existing[existing["date"] < new_min_date]
-            if len(existing_prior) > 0:
-                df = pd.concat([existing_prior, df], ignore_index=True)
-                df = df.sort_values("date").reset_index(drop=True)
-                print(f"[preprocessor] Merged {len(existing_prior)} prior rows from "
-                      f"{region_master} + {len(df) - len(existing_prior)} new = {len(df)} total")
-        except Exception as e:
-            print(f"[preprocessor] WARNING: Could not merge with region master: {e}")
-
     if save:
         os.makedirs(config.DATA_DIR, exist_ok=True)
+
+        # Save to the shared master file (pipeline convention)
         df.to_csv(config.MASTER_FILE, index=False)
         print(f"[preprocessor] Saved → {config.MASTER_FILE}")
+
+        # CRITICAL: also save to the region-specific master file IMMEDIATELY.
+        # Run_All_regions.sh copies the shared file to the region-specific file AFTER
+        # scorer.py runs — meaning scorer would read the region-specific file from the
+        # PREVIOUS run (stale data) not the freshly merged one.
+        # Writing it here ensures scorer always finds up-to-date data, regardless of
+        # shell script execution order.
+        region_master = f"{config.DATA_DIR}/master_dataset_clean_{config.ACTIVE_REGION}.csv"
+        df.to_csv(region_master, index=False)
+        print(f"[preprocessor] Saved → {region_master}")
 
     return df
 

@@ -23,22 +23,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import config
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
 SCORES_FILE  = "outputs/daily_scores.csv"
 MASTER_FILE  = "data/master_dataset_clean.csv"
 
-REGION_NAMES = {
-    "middle_east":    "Middle East",
-    "eastern_europe": "Eastern Europe",
-    "taiwan_strait":  "Taiwan Strait",
-}
-REGION_ETFS = {
-    "middle_east":    "XLE (Energy)",
-    "eastern_europe": "XME (Metals)",
-    "taiwan_strait":  "SOXX / QQQ (Semiconductors)",
-}
+# Derive region metadata dynamically from config so all regions are reachable
+REGION_NAMES = {k: v.get("label", k) for k, v in config.REGIONS.items()}
+REGION_ETFS  = {k: v.get("sector_etf", "N/A") for k, v in config.REGIONS.items()}
 
 GRPS_LABELS = {
     "STABLE":   (0,  33),
@@ -188,7 +182,7 @@ def detect_anomalies(scores_series, window=60, z_thresh=2.0):
 def main():
     parser = argparse.ArgumentParser(description="Goldstein Local Analysis Engine")
     parser.add_argument("--region",  type=str, default=None,
-                        choices=["middle_east", "eastern_europe", "taiwan_strait"],
+                        choices=list(REGION_NAMES.keys()),
                         help="Region to analyse (default: reads from .env)")
     parser.add_argument("--days",    type=int, default=180,
                         help="Lookback window in days (default: 180)")
@@ -331,7 +325,9 @@ def main():
         if not recent_anomalies.empty:
             out.append("  Recent anomaly dates:")
             for dt, z_val in recent_anomalies.items():
-                out.append(f"    {dt.strftime('%Y-%m-%d')}  z={z_val:.2f}  GRPS={grps_series.get(dt, np.nan):.1f}")
+                grps_at_dt = grps_series.get(dt, np.nan)
+                grps_str = f"{grps_at_dt:.1f}" if not np.isnan(grps_at_dt) else "N/A"
+                out.append(f"    {dt.strftime('%Y-%m-%d')}  z={z_val:.2f}  GRPS={grps_str}")
     out.append("")
 
     # ── Section 3: GARCH-X Signal ─────────────────────────────────────────────

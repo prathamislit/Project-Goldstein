@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
 """
 config.py — Single source of truth for all project parameters.
 All hardcoded values live here. Nothing is scattered across modules.
 """
 
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
