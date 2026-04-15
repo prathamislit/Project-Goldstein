@@ -1,45 +1,43 @@
 # Project Goldstein
-### Quantamental Geopolitical Volatility Signal Engine
+**Quantamental Geopolitical Volatility Signal Engine**
 
 A signal engine that converts real-time geopolitical event streams into a market-calibrated risk score — the **Geopolitical Risk Premium Score (GRPS)** — updated daily across 12 global chokepoints and validated against equity and commodity volatility.
+
+> **Research documentation:** Full methodology and institutional tearsheet available on request — [pns5158@psu.edu](mailto:pns5158@psu.edu)
 
 ---
 
 ## What it does
 
-Most geopolitical risk tools produce qualitative assessments: red/amber/green country ratings, analyst commentary, narrative indexes. Project Goldstein is different. It produces a single 0–100 score per region that has been statistically validated to predict **variance increases** in linked sector instruments — not just correlate with returns after the fact.
+Most geopolitical risk tools produce qualitative assessments: red/amber/green country ratings, analyst commentary, narrative indexes. Project Goldstein is different. It produces a single 0–100 score per region that has been statistically validated to predict variance increases in linked sector instruments — not just correlate with returns after the fact.
 
-The core insight is that geopolitical risk does not move prices on average. It moves **volatility**. Modelling it as a variance input — not a return predictor — is what makes GRPS actionable for risk desks rather than just interesting to researchers.
+The core insight is that geopolitical risk does not move prices on average. **It moves volatility.** Modelling it as a variance input — not a return predictor — is what makes GRPS actionable for risk desks rather than just interesting to researchers.
 
 ---
 
 ## How GRPS works
 
-The score has three components:
+GRPS is a composite score built from three signal components — event-based instability, sector volatility premium, and macro fear conditioning — combined under a proprietary weighting and regime classification scheme.
 
-- **Instability Index (40%)** — Percentile rank of Goldstein event hostility over a 252-day rolling window. Measures where the current event balance sits relative to the past year of activity in that region.
-- **Vol Premium (40%)** — Realized volatility of the sector ETF proxy, scaled by a geopolitical gate derived from the rolling correlation between Goldstein scores and ETF returns. Captures how much the market is actually pricing the geopolitical channel.
-- **VIX Component (20%)** — Z-score of VIX relative to its 252-day rolling distribution, with conditional suppression when macro fear is decoupled from regional event flow.
+The scoring and model engine are not included in this public release. GRPS outputs three regimes: **STABLE** (0–33) · **ELEVATED** (33–66) · **CRITICAL** (66–100).
 
-GRPS outputs three regimes: **STABLE** (0–33), **ELEVATED** (33–66), **CRITICAL** (66–100).
-
-This is a risk management signal. It quantifies variance pressure — not direction. A fund using GRPS=ELEVATED on Hormuz to size a crude hedge is not arbitraging an inefficiency; they are pricing protection. This is why the signal does not decay upon publication.
+This is a **risk management signal**. It quantifies variance pressure — not direction. A fund using GRPS=ELEVATED on Hormuz to size a crude hedge is not arbitraging an inefficiency; they are pricing protection. This is why the signal does not decay upon publication.
 
 ---
 
 ## Validated Results
 
-All coefficients fitted on 2022–2026 data. p < 0.001 across validated regions.
+Coefficients fitted on 2022–2026 data. Warm-up period (first 252 trading days per region) excluded from all validation.
 
 | Region | ETF Proxy | γ (geo→variance) | p-value |
 |---|---|---|---|
-| Middle East | XLE | **0.934** | < 0.001 |
-| Eastern Europe | XME | **0.918** | < 0.001 |
-| Taiwan Strait | SOXX | **0.897** | < 0.001 |
+| Middle East | XLE | 0.934 | < 0.001 |
+| Eastern Europe | XME | 0.918 | < 0.001 |
+| Taiwan Strait | SOXX | 0.897 | < 0.001 |
 
 Remaining 9 regions are live. Coefficients will be published after their 90-day post-warmup validation window closes.
 
-**Backtest (threshold-crossing event study, 21-day forward window, 12 regions):**
+**Backtest** (threshold-crossing event study, 21-day forward window, 12 regions):
 
 | Metric | Result |
 |---|---|
@@ -47,8 +45,6 @@ Remaining 9 regions are live. Coefficients will be published after their 90-day 
 | Avg false positive rate | 29.2% |
 | Avg Spearman IC | 0.23 |
 | Total validated crossing events | 323 |
-
-Warm-up period (first 252 trading days per region) excluded from all validation.
 
 ---
 
@@ -74,23 +70,21 @@ Warm-up period (first 252 trading days per region) excluded from all validation.
 ## Architecture
 
 ```
-gdelt_fetcher.py        → sqrt-weighted Goldstein scores from GDELT via BigQuery
+gdelt_fetcher.py        → event data ingestion from GDELT via BigQuery
 market_data.py          → sector ETF + benchmark prices via yfinance
-preprocessor.py         → aligns and merges signals into master dataset
-garch_model.py          → [PRIVATE] volatility model with geopolitical exogenous input
+preprocessor.py         → signal alignment and master dataset construction
+garch_model.py          → [PRIVATE] volatility model
 scorer.py               → [PRIVATE] GRPS scoring engine (0–100)
-acled_fetcher.py        → ACLED ground-truth anchor — hard gate on geo_gate
-data_quality.py         → QC assertions: VIX bounds, ETF return bounds, GDELT event floors
+acled_fetcher.py        → ACLED ground-truth anchor
+data_quality.py         → pipeline QC and bounds assertions
 backtest.py             → threshold-crossing event study, hit rate, IC computation
 analyze.py              → CLI analysis: regime narrative, momentum, anomaly detection
-generate_insights.py    → builds per-region intelligence brief (HTML)
-merge_reports.py        → merges intelligence brief + backtest report into one dashboard
+generate_insights.py    → per-region intelligence brief (HTML)
+merge_reports.py        → combined intelligence + backtest dashboard
 Dashboard.py            → live Plotly Dash dashboard (http://localhost:8050)
-config.py               → single source of truth for all region and model parameters
+config.py               → region and model configuration
 Run_All_regions.sh      → full pipeline runner — all 12 regions, health check, auto-launch
 ```
-
-The model engine (`garch_model.py`, `scorer.py`) is not in this public release. They contain the proprietary scoring formula and volatility model architecture.
 
 ---
 
@@ -107,7 +101,8 @@ cp .env.example .env
 
 **Requirements:** Python 3.11+, Google Cloud account with BigQuery API enabled, GCP service account JSON key.
 
-Optional — ACLED ground-truth integration (free for research):
+**Optional — ACLED ground-truth integration** (free for research):
+
 ```bash
 # Add to .env:
 ACLED_API_KEY=your_key
@@ -150,6 +145,14 @@ Pipeline health written to `logs/health_status.txt` after every run. Run log in 
 
 ---
 
+## Research & Documentation
+
+Full methodology, validation walkthrough, and institutional tearsheet available on request.
+
+Email [pns5158@psu.edu](mailto:pns5158@psu.edu) — subject: **"Project Goldstein — Research Docs"**
+
+---
+
 ## Access
 
 | Tier | What you get | Price |
@@ -159,15 +162,16 @@ Pipeline health written to `logs/health_status.txt` after every run. Run log in 
 | Full Suite | Dashboard + data + CLI | $1,999/mo (all 12) |
 | Enterprise | Source license + support | Contact |
 
-→ **pns5158@psu.edu**
+→ [pns5158@psu.edu](mailto:pns5158@psu.edu)
 
 ---
 
 ## What this is not
 
-This is not a news aggregator. It is not a qualitative risk rating. It does not predict specific events or market direction. It measures the **current geopolitical variance regime** of a region and the risk premium that regime commands in linked financial instruments — updated every trading day.
+This is not a news aggregator. It is not a qualitative risk rating. It does not predict specific events or market direction. It measures the current geopolitical variance regime of a region and the risk premium that regime commands in linked financial instruments — updated every trading day.
 
 ---
 
 *Project Goldstein · Quantamental Geopolitical Volatility Signal · Core model engine not included in public release.*
-*REGULATORY SAFE HARBOR: GRPS is strictly informational data. It does not constitute investment advice under SEC Rule 202(a)(11).*
+
+**REGULATORY SAFE HARBOR:** GRPS is strictly informational data. It does not constitute investment advice under SEC Rule 202(a)(11).
