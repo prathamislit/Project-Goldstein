@@ -31,7 +31,7 @@ REGIONS = {
         "sector_etf":  "XLE",               # Energy — most direct exposure
         "benchmarks":  ["SPY", "GLD"],       # Broad market + gold as safe haven
         "gdelt_countries": [                 # CAMEO CountryCode values for region
-            "IR", "IZ", "IS", "SA", "SY", "YM", "LE", "JO", "KU", "TC"
+            "IR", "IZ", "IS", "SA", "SY", "YM", "LE", "JO", "KU", "TC", "GZ", "WE"
         ],
         "gdelt_adm1_prefix": None,           # None = use country-level filter only
     },
@@ -54,9 +54,14 @@ REGIONS = {
 
     # ── Strait of Hormuz ──────────────────────────────────────────────────────
     # Iran + Oman + Saudi Arabia — controls ~20% of global oil transit
+    # ETF: USO (United States Oil Fund) — tracks WTI crude directly.
+    # Preferred over XLE (which also covers Permian Basin / Canadian oil sands,
+    # diluting Hormuz-specific geopolitical signal with unrelated US production).
+    # USO is directly priced off Brent/WTI, where Hormuz disruption is
+    # immediately reflected. Previously duplicated XLE with Middle East region.
     "strait_of_hormuz": {
         "label":            "Strait of Hormuz",
-        "sector_etf":       "XLE",
+        "sector_etf":       "USO",
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["IR", "MU", "SA"],
         "gdelt_adm1_prefix": None,
@@ -64,9 +69,13 @@ REGIONS = {
 
     # ── South China Sea ────────────────────────────────────────────────────────
     # China + Philippines + Vietnam + Malaysia — $3.4T annual trade
+    # ETF: EWH (iShares MSCI Hong Kong) — Hong Kong financial markets are the
+    # most direct liquid proxy for SCS geopolitical risk; HK equities re-price
+    # immediately on Taiwan/SCS escalation. Previously duplicated SOXX with
+    # Taiwan Strait, collapsing them into mathematically identical vol signals.
     "south_china_sea": {
         "label":            "South China Sea",
-        "sector_etf":       "SOXX",
+        "sector_etf":       "EWH",
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["CH", "RP", "VM", "MY"],
         "gdelt_adm1_prefix": None,
@@ -126,9 +135,13 @@ REGIONS = {
 
     # ── Venezuela / Caribbean ─────────────────────────────────────────────────
     # Venezuela + Guyana + Colombia — US sanctions cycles, Guyana Exxon discovery
+    # ETF: ILF (iShares Latin America 40) — most liquid LatAm ETF; incorporates
+    # Venezuela sanctions regime impact through Brazil/Colombia equity exposure
+    # and captures Guyana oil discovery premium. Previously used XLE (third
+    # duplicate of US energy ETF), which has minimal direct Venezuela exposure.
     "venezuela": {
         "label":            "Venezuela / Caribbean",
-        "sector_etf":       "XLE",
+        "sector_etf":       "ILF",
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["VE", "GY", "CO"],
         "gdelt_adm1_prefix": None,
@@ -165,6 +178,7 @@ GRANGER_LAGS     = [1, 3, 7]          # Lag windows to test (days)
 ADF_SIGNIFICANCE = 0.05               # p-value threshold for stationarity
 GRANGER_SIGNIFICANCE = 0.05           # p-value threshold for Granger precedence
 VAR_MAX_LAGS     = 10                 # Max lags for VAR model selection (AIC)
+PERCENTILE_WINDOW = 1008              # Trailing window for instability percentiles
 
 # ─── VIX Regime Detection ────────────────────────────────────────────────────
 VIX_TICKER          = "^VIX"

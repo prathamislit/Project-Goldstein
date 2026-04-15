@@ -35,12 +35,18 @@ def build_query(region_cfg: dict, start_date: str, end_date: str) -> str:
     """
     Constructs the BigQuery SQL for the active region.
 
-    Volume-Weighted Average:
-      SUM(GoldsteinScale * NumArticles) / SUM(NumArticles)
+    Sqrt-Weighted Average (replaces linear NumArticles weighting):
+      SUM(GoldsteinScale * SQRT(NumArticles)) / SUM(SQRT(NumArticles))
 
-    This weights each event by how many articles covered it,
-    so a 3-article border skirmish doesn't outweigh a
-    500-article airstrike.
+    Why sqrt and not raw NumArticles:
+    - Linear weighting lets a single 500-article saturation event (e.g. a
+      celebrity diplomatic row) dominate over a genuine escalation that only
+      three wire services covered on a competing-news day.
+    - sqrt dampens the dominance of high-volume days without ignoring salience
+      entirely — a 400-article event still outweighs a 4-article event (10x
+      weight), but not 100x as with linear weighting.
+    - Reduces systematic bias from competing news cycles (weekends, US domestic
+      stories crowding out regional geopolitical events).
     """
     country_list = ", ".join(f"'{c}'" for c in region_cfg["gdelt_countries"])
 
@@ -51,9 +57,10 @@ def build_query(region_cfg: dict, start_date: str, end_date: str) -> str:
     query = f"""
     SELECT
         SQLDATE,
-        SUM(GoldsteinScale * NumArticles) / NULLIF(SUM(NumArticles), 0) AS goldstein_wavg,
-        SUM(NumArticles)                                                 AS total_articles,
-        COUNT(*)                                                         AS event_count
+        SUM(GoldsteinScale * SQRT(NumArticles)) / NULLIF(SUM(SQRT(NumArticles)), 0) AS goldstein_wavg,
+        SUM(NumArticles)                                                              AS total_articles,
+        COUNT(*)                                                                      AS event_count,
+        COUNT(DISTINCT {config.GDELT_COUNTRY_COL})                                   AS source_country_diversity
     FROM
         `{config.GDELT_TABLE}`
     WHERE
@@ -102,6 +109,19 @@ def fetch_gdelt(save: bool = True) -> pd.DataFrame:
     if len(low_volume_days) > 0:
         print(f"[gdelt_fetcher] WARNING: {len(low_volume_days)} days with <5 articles — "
               f"Goldstein scores may be noisy on these dates.")
+
+    # FLAW 10 fix: Validate source country diversity — detects FIPS filter failures.
+    # If a key FIPS code is misconfigured, events drop to zero silently.
+    # source_country_diversity < expected means a country is returning no events.
+    n_countries = len(region_cfg["gdelt_countries"])
+    expected_min_diversity = max(1, n_countries // 2)
+    low_diversity = df[df["source_country_diversity"] < expected_min_diversity]
+    if len(low_diversity) > 0:
+        print(f"[gdelt_fetcher] WARNING: {len(low_diversity)} days with <{expected_min_diversity} "
+              f"source countries — possible FIPS filter failure or genuine regional silence.")
+    else:
+        print(f"[gdelt_fetcher] FIPS validation: OK — all days have ≥{expected_min_diversity} "
+              f"source countries (of {n_countries} configured).")
 
     if save:
         os.makedirs(config.DATA_DIR, exist_ok=True)
