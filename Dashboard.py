@@ -475,42 +475,58 @@ app.index_string = """<!DOCTYPE html>
     background: rgba(17,16,8,0.08); border: 1px solid rgba(17,16,8,0.18);
     color: #55504A; font-size: 9px; font-family: 'JetBrains Mono', monospace;
     cursor: default; margin-left: 8px; vertical-align: middle;
-    position: relative; flex-shrink: 0;
+    position: static; flex-shrink: 0;
   }
-  .info-anchor .info-tooltip {
+  /* Outer wrapper handles the absolute positioning */
+  .info-wrap {
+    position: relative; display: inline-flex;
+    align-items: center; flex-shrink: 0;
+  }
+  .info-wrap .info-tooltip {
     display: none;
-    position: absolute; bottom: calc(100% + 10px); left: 50%;
-    transform: translateX(-50%);
-    background: #EDE5D0; border: 1px solid rgba(17,16,8,0.18);
-    border-radius: 6px; padding: 12px 14px;
-    width: 320px; z-index: 999;
-    box-shadow: 0 4px 16px rgba(17,16,8,0.10);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%; transform: translateX(-50%);
+    background: #EDE5D0;
+    border: 1px solid rgba(17,16,8,0.18);
+    border-radius: 6px;
+    padding: 14px 16px;
+    width: 300px;
+    min-width: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(17,16,8,0.12);
     pointer-events: none;
   }
-  .info-anchor:hover .info-tooltip { display: block; }
+  .info-wrap:hover .info-tooltip { display: block; }
   .info-tooltip-title {
-    font-family: 'JetBrains Mono', monospace; font-size: 9px;
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: #111008; margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #111008; margin-bottom: 10px;
+    border-bottom: 1px solid rgba(17,16,8,0.12);
+    padding-bottom: 7px;
   }
   .info-tooltip-body {
-    font-family: 'EB Garamond', Georgia, serif; font-size: 13px;
-    color: #55504A; line-height: 1.55;
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 14px; color: #55504A;
+    line-height: 1.6; white-space: normal;
   }
-  .info-tooltip-body strong { color: #111008; }
+  .info-tooltip-body strong { color: #111008; font-weight: 600; }
   /* caret */
-  .info-anchor .info-tooltip::after {
+  .info-wrap .info-tooltip::after {
     content: ''; position: absolute; top: 100%; left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
     border-top-color: #EDE5D0;
   }
-  .info-anchor .info-tooltip::before {
-    content: ''; position: absolute; top: 100%; left: 50%;
+  .info-wrap .info-tooltip::before {
+    content: ''; position: absolute; top: calc(100% + 1px); left: 50%;
     transform: translateX(-50%);
     border: 7px solid transparent;
     border-top-color: rgba(17,16,8,0.18);
-    margin-top: 1px;
   }
 </style>
 </head>
@@ -570,16 +586,16 @@ app.layout = html.Div([
                 html.Span([
                     "GRPS COMPARISON  —  ALL REGIONS",
                     html.Span([
-                        "i",
+                        html.Span("i", className="info-anchor"),
                         html.Div([
-                            html.Div("Methodology note", className="info-tooltip-title"),
+                            html.Div("Methodology Note", className="info-tooltip-title"),
                             html.Div([
-                                "GRPS scores are computed on days when GDELT / ACLED return sufficient event data. On thin news days the pipeline produces no output. ",
+                                "GRPS scores are produced on days when GDELT / ACLED return sufficient event data. On thin news days the pipeline produces no output. ",
                                 html.Strong("Missing days are forward-filled: "),
                                 "if no new data arrived, the prior regime assessment remains valid — the geopolitical situation did not change, only the data feed was thin. Forward-fill is standard practice for institutional risk indices.",
                             ], className="info-tooltip-body"),
                         ], className="info-tooltip"),
-                    ], className="info-anchor"),
+                    ], className="info-wrap"),
                 ], style={
                     "display": "inline-flex", "alignItems": "center",
                     "color": TEXT_SEC, "fontSize": "9px",
