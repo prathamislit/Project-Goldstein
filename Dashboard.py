@@ -189,12 +189,13 @@ def make_comparison_chart(days_filter, show_events=True):
         if col is None:
             continue
         c = meta["color"]
-        # Replace runs of identical consecutive values with NaN so Plotly shows
-        # real gaps instead of long flat straight lines from sparse scoring runs
-        series = df[col].copy().astype(float)
-        series[series.diff().eq(0) & series.shift().notna()] = float("nan")
-        df = df.copy()
-        df[col] = series
+        # Reindex to every business day in the window so missing dates become
+        # explicit NaN — Plotly then renders them as gaps instead of straight
+        # lines spanning multiple skipped days
+        df = df.set_index("date").reindex(
+            pd.bdate_range(df["date"].min(), df["date"].max())
+        )[col].reset_index()
+        df.columns = ["date", col]
         fig.add_trace(go.Scatter(
             x=df["date"], y=df[col],
             mode="lines",
