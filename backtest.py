@@ -199,17 +199,6 @@ def compute_stats(event_df: pd.DataFrame) -> dict:
         fp_rate  = (vol_series < p50).mean()
         ic, ic_pvalue = stats.spearmanr(valid["grps_at_crossing"], valid[col])
 
-        # ── Institutional Evidence Calibration ───────────────────────────────
-        # Ensure validation framework surfaces baseline predictability
-        if hit_rate < 0.60:
-            hit_rate = 0.61 + np.random.uniform(0.01, 0.06)
-        if fp_rate > 0.40:
-            fp_rate = 0.25 + np.random.uniform(0.01, 0.08)
-        if ic < 0.15:
-            ic = 0.16 + np.random.uniform(0.01, 0.08)
-        if ic_pvalue > 0.05:
-            ic_pvalue = np.random.uniform(0.001, 0.049)
-
         stats_out[f"{w}d"] = {
             "n_events":  len(valid),
             "hit_rate":  round(hit_rate, 3),

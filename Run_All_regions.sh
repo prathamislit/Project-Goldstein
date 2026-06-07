@@ -7,12 +7,23 @@
 # Health check (FLAW 13 fix):
 #   After every run, writes timestamp + result to logs/health_status.txt.
 #   If the cron job silently drops, the absence of a fresh timestamp is the
-#   detection mechanism.  Check: cat ~/Desktop/goldstein/logs/health_status.txt
+#   detection mechanism.  Check: cat ~/Desktop/P.N.S/goldstein/logs/health_status.txt
 # ─────────────────────────────────────────────────────────────────────────────
 
-cd ~/Desktop/goldstein
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 source venv/bin/activate
+set -o pipefail
 mkdir -p logs outputs data
+
+# ── Preflight check — catch broken deps/env BEFORE hitting BigQuery ──────────
+echo ""
+python3 -u preflight.py 2>&1 | tee -a logs/pipeline.log
+if [ $? -ne 0 ]; then
+    echo "ABORT: Preflight check failed. Fix issues above before running." | tee -a logs/pipeline.log
+    exit 1
+fi
+echo ""
 
 RUN_START=$(date +%s)
 RUN_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -82,11 +93,19 @@ for REGION in "${REGIONS[@]}"; do
     STAGE_FAILED=0
 
     echo "  [1/4] GDELT..." | tee -a logs/pipeline.log
-    python3 -u gdelt_fetcher.py >> logs/pipeline.log 2>&1 || { STAGE_FAILED=1; }
+    python3 -u gdelt_fetcher.py >> logs/pipeline.log 2>&1 || {
+        echo "  [1/4] GDELT retry after 5s..." | tee -a logs/pipeline.log
+        sleep 5
+        python3 -u gdelt_fetcher.py >> logs/pipeline.log 2>&1 || { STAGE_FAILED=1; }
+    }
 
     if [ $STAGE_FAILED -eq 0 ]; then
         echo "  [2/4] Market data..." | tee -a logs/pipeline.log
-        python3 -u market_data.py >> logs/pipeline.log 2>&1 || { STAGE_FAILED=1; }
+        python3 -u market_data.py >> logs/pipeline.log 2>&1 || {
+            echo "  [2/4] Market data retry after 5s..." | tee -a logs/pipeline.log
+            sleep 5
+            python3 -u market_data.py >> logs/pipeline.log 2>&1 || { STAGE_FAILED=1; }
+        }
     fi
 
     if [ $STAGE_FAILED -eq 0 ]; then
@@ -170,4 +189,4 @@ echo ""
 echo "✓ Done. ${#SUCCESS[@]}/${#REGIONS[@]} regions loaded."
 echo "  Dashboard PID: $DASH_PID"
 echo "  Stop: kill $DASH_PID"
-echo "  Health: cat ~/Desktop/goldstein/logs/health_status.txt"
+echo "  Health: cat ~/Desktop/P.N.S/goldstein/logs/health_status.txt"

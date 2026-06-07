@@ -1,0 +1,31 @@
+Copyright (c) 2026 Pratham N.S. All rights reserved.
+
+This repository contains partial source code for Project Goldstein, a proprietary
+quantitative geopolitical volatility signal engine.
+
+Permission is hereby granted to view and fork this repository for personal,
+non-commercial evaluation purposes only.
+
+The following restrictions apply:
+
+1. COMMERCIAL USE PROHIBITED. No part of this codebase may be used, adapted,
+   or incorporated into any commercial product or service without prior written
+   permission from the copyright holder.
+
+2. NO DERIVATIVE SIGNAL PRODUCTS. You may not use this code, in whole or in part,
+   to build, train, or operate any geopolitical risk signal, volatility model,
+   or market intelligence product intended for sale or distribution.
+
+3. MODEL ENGINE NOT LICENSED. The scoring engine and volatility model components
+   (garch_model.py, scorer.py) are explicitly excluded from this license. The
+   stub files included in this repository are placeholders only. Reverse engineering,
+   reconstruction, or independent reimplementation of the excluded components
+   for commercial purposes is prohibited.
+
+4. NO REDISTRIBUTION. Redistribution of this code, modified or unmodified, for
+   commercial purposes is prohibited without written consent.
+
+For licensing inquiries, API access, or institutional use:
+→ pns5158@psu.edu
+
+Project Goldstein — Quantamental Geopolitical Volatility Signal

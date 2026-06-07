@@ -34,6 +34,7 @@ REGIONS = {
             "IR", "IZ", "IS", "SA", "SY", "YM", "LE", "JO", "KU", "TC", "GZ", "WE"
         ],
         "gdelt_adm1_prefix": None,           # None = use country-level filter only
+        "color": "#FF6B35",
     },
     "eastern_europe": {
         "label":       "Eastern Europe",
@@ -41,6 +42,7 @@ REGIONS = {
         "benchmarks":  ["SPY", "GLD"],
         "gdelt_countries": ["UP", "RS", "PL", "BO", "MD"],
         "gdelt_adm1_prefix": None,
+        "color": "#4ECDC4",
     },
     "taiwan_strait": {
         "label":       "Taiwan Strait",
@@ -48,9 +50,8 @@ REGIONS = {
         "benchmarks":  ["SPY", "QQQ"],
         "gdelt_countries": ["TW", "CH"],
         "gdelt_adm1_prefix": None,
+        "color": "#FF3366",
     },
-
-
 
     # ── Strait of Hormuz ──────────────────────────────────────────────────────
     # Iran + Oman + Saudi Arabia — controls ~20% of global oil transit
@@ -65,6 +66,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["IR", "MU", "SA"],
         "gdelt_adm1_prefix": None,
+        "color": "#BD65FF",
     },
 
     # ── South China Sea ────────────────────────────────────────────────────────
@@ -79,6 +81,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["CH", "RP", "VM", "MY"],
         "gdelt_adm1_prefix": None,
+        "color": "#00D4AA",
     },
 
     # ── Korean Peninsula ──────────────────────────────────────────────────────
@@ -89,6 +92,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["KS", "KN", "JA"],
         "gdelt_adm1_prefix": None,
+        "color": "#FF69B4",
     },
 
     # ── Panama Canal ──────────────────────────────────────────────────────────
@@ -99,6 +103,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["PM", "CO", "CU"],
         "gdelt_adm1_prefix": None,
+        "color": "#7FFF00",
     },
 
     # ── Red Sea / Suez Canal ──────────────────────────────────────────────────
@@ -110,6 +115,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["YM", "DJ", "EG", "SA"],
         "gdelt_adm1_prefix": None,
+        "color": "#FF8C00",
     },
 
     # ── India-Pakistan ────────────────────────────────────────────────────────
@@ -120,6 +126,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["IN", "PK", "AF"],
         "gdelt_adm1_prefix": None,
+        "color": "#9370DB",
     },
 
     # ── Sahel / West Africa ───────────────────────────────────────────────────
@@ -131,6 +138,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["ML", "NG", "UV", "CD"],
         "gdelt_adm1_prefix": None,
+        "color": "#FFD700",
     },
 
     # ── Venezuela / Caribbean ─────────────────────────────────────────────────
@@ -145,6 +153,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["VE", "GY", "CO"],
         "gdelt_adm1_prefix": None,
+        "color": "#00BFFF",
     },
 
     # ── Russia-Arctic ─────────────────────────────────────────────────────────
@@ -155,6 +164,7 @@ REGIONS = {
         "benchmarks":       ["SPY", "GLD"],
         "gdelt_countries":  ["RS", "NO", "CA"],
         "gdelt_adm1_prefix": None,
+        "color": "#C0C0C0",
     },
 
 }

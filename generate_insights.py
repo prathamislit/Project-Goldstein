@@ -24,20 +24,16 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# ── Region metadata ───────────────────────────────────────────────────────────
+import config as _cfg
+
+# ── Region metadata — derived from config.py (single source of truth) ─────────
 REGIONS_META = {
-    "middle_east":      {"label": "Middle East",         "etf": "XLE",  "color": "#FF6B35"},
-    "eastern_europe":   {"label": "Eastern Europe",      "etf": "XME",  "color": "#4ECDC4"},
-    "taiwan_strait":    {"label": "Taiwan Strait",       "etf": "SOXX", "color": "#FF3366"},
-    "strait_of_hormuz": {"label": "Strait of Hormuz",   "etf": "USO",  "color": "#BD65FF"},
-    "south_china_sea":  {"label": "South China Sea",    "etf": "EWH",  "color": "#00D4AA"},
-    "korean_peninsula": {"label": "Korean Peninsula",   "etf": "EWJ",  "color": "#FF69B4"},
-    "panama_canal":     {"label": "Panama Canal",       "etf": "IYT",  "color": "#7FFF00"},
-    "red_sea":          {"label": "Red Sea / Suez",     "etf": "IYT",  "color": "#FF8C00"},
-    "india_pakistan":   {"label": "India-Pakistan",     "etf": "INDA", "color": "#9370DB"},
-    "sahel":            {"label": "Sahel / W. Africa",  "etf": "GDX",  "color": "#FFD700"},
-    "venezuela":        {"label": "Venezuela / Carib.", "etf": "ILF",  "color": "#00BFFF"},
-    "russia_arctic":    {"label": "Russia / Arctic",    "etf": "XOP",  "color": "#C0C0C0"},
+    k: {
+        "label": v["label"],
+        "etf":   v["sector_etf"],
+        "color": v.get("color", "#888"),
+    }
+    for k, v in _cfg.REGIONS.items()
 }
 
 OUTPUTS_DIR = Path("outputs")
