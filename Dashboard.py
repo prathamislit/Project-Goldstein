@@ -189,11 +189,18 @@ def make_comparison_chart(days_filter, show_events=True):
         if col is None:
             continue
         c = meta["color"]
+        # Replace runs of identical consecutive values with NaN so Plotly shows
+        # real gaps instead of long flat straight lines from sparse scoring runs
+        series = df[col].copy().astype(float)
+        series[series.diff().eq(0) & series.shift().notna()] = float("nan")
+        df = df.copy()
+        df[col] = series
         fig.add_trace(go.Scatter(
             x=df["date"], y=df[col],
             mode="lines",
             name=meta["label"],
-            line=dict(color=c, width=2.0),
+            line=dict(color=c, width=1.6),
+            connectgaps=False,
             hovertemplate=f"<b>{meta['label']}</b><br>%{{x|%d %b %Y}}<br>GRPS: %{{y:.1f}}<extra></extra>",
         ))
 
