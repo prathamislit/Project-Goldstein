@@ -149,24 +149,25 @@ def build_combined(insights_html: str, backtest_html: str) -> str:
 
 /* ── Insights page overrides ── */
 #page-insights {{
-  background: #080c14;
+  background: #faf9f5;
   min-height: 100%;
   padding: 0;
   margin: -36px -40px;
   padding: 28px 32px;
 }}
 #page-insights h2 {{
-  color: #e8e8e8;
-  font-size: 14px;
+  color: #111008;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 1px solid #1a2030;
+  letter-spacing: 0.18em;
+  border-bottom: 1px solid rgba(17,16,8,.10);
   padding-bottom: 10px;
   margin-top: 0;
 }}
 /* Override body bg for insights page consistency */
-body {{ background: #0d1117; }}
-main {{ background: #0d1117; }}
+body {{ background: #faf9f5; }}
+main {{ background: #faf9f5; }}
 
 /* Scrollable main */
 main {{ overflow-y: auto; height: 100vh; }}
@@ -195,7 +196,7 @@ main {{ overflow-y: auto; height: 100vh; }}
 
   <div class="nav-section-label">Signal</div>
   <div class="nav-item active" onclick="show('insights',this)">
-    <span class="nav-dot" style="background:#7B9FFF;"></span>Intelligence Brief
+    <span class="nav-dot" style="background:#B8922A;"></span>Intelligence Brief
   </div>
 
   <div class="nav-section-label">Validation</div>

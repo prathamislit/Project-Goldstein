@@ -327,79 +327,81 @@ def _export_html(events: pd.DataFrame, summary: pd.DataFrame) -> None:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project Goldstein — Backtest Validation Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
   :root {{
-    --bg: #1a1a18; --bg2: #222220; --bg3: #2a2a28;
-    --text: #e8e8e4; --text2: #a8a8a0; --text3: #686860;
-    --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.18);
-    --green-bg: #173404; --green-text: #C0DD97; --green-border: #3B6D11;
-    --amber-bg: #412402; --amber-text: #FAC775; --amber-border: #854F0B;
-    --red-bg: #501313; --red-text: #F7C1C1; --red-border: #A32D2D;
-    --blue-bg: #042C53; --blue-text: #B5D4F4; --blue-border: #185FA5;
-    --teal-bg: #04342C; --teal-text: #9FE1CB; --teal-border: #0F6E56;
-    --accent: #378ADD;
-    --nav-bg: #0D1117;
-    --nav-text: #e8e8e4;
-    --nav-active: #ffffff;
-    --nav-muted: #888880;
+    --bg: #faf9f5; --bg2: #EDE5D0; --bg3: #E0D8C3;
+    --text: #111008; --text2: #55504A; --text3: #7A766E;
+    --border: rgba(17,16,8,0.10); --border2: rgba(17,16,8,0.18);
+    --green-bg: rgba(42,110,42,0.08); --green-text: #2A6E2A; --green-border: rgba(42,110,42,0.30);
+    --amber-bg: rgba(184,146,42,0.08); --amber-text: #8E6F1E; --amber-border: rgba(184,146,42,0.30);
+    --red-bg: rgba(139,32,32,0.08); --red-text: #8B2020; --red-border: rgba(139,32,32,0.30);
+    --blue-bg: rgba(61,58,51,0.06); --blue-text: #3D3A33; --blue-border: rgba(61,58,51,0.20);
+    --teal-bg: rgba(42,110,42,0.06); --teal-text: #2A6E2A; --teal-border: rgba(42,110,42,0.20);
+    --accent: #B8922A;
+    --nav-bg: #EDE5D0;
+    --nav-text: #111008;
+    --nav-active: #111008;
+    --nav-muted: #55504A;
   }}
 
-  html {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }}
+  html {{ font-family: 'EB Garamond', Georgia, serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }}
   body {{ display: flex; min-height: 100vh; }}
 
-  nav {{ width: 220px; min-width: 220px; background: var(--nav-bg); padding: 0; display: flex; flex-direction: column; }}
-  .nav-brand {{ padding: 24px 20px 16px; border-bottom: 0.5px solid rgba(255,255,255,0.08); }}
-  .nav-brand-title {{ font-size: 13px; font-weight: 500; color: var(--nav-active); letter-spacing: 0.03em; }}
-  .nav-brand-sub {{ font-size: 11px; color: var(--nav-muted); margin-top: 2px; }}
-  .nav-section {{ padding: 16px 12px 8px; font-size: 10px; font-weight: 500; color: var(--nav-muted); letter-spacing: 0.08em; text-transform: uppercase; }}
-  .nav-item {{ display: flex; align-items: center; gap: 10px; padding: 8px 20px; font-size: 13px; color: var(--nav-muted); cursor: pointer; border-left: 2px solid transparent; transition: color 0.15s, background 0.15s; }}
-  .nav-item:hover {{ color: var(--nav-active); background: rgba(255,255,255,0.04); }}
-  .nav-item.active {{ color: var(--nav-active); border-left-color: #378ADD; background: rgba(55,138,221,0.10); }}
+  nav {{ width: 220px; min-width: 220px; background: var(--nav-bg); padding: 0; display: flex; flex-direction: column; border-right: 1px solid var(--border); }}
+  .nav-brand {{ padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }}
+  .nav-brand-title {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--nav-active); letter-spacing: 0.18em; text-transform: uppercase; }}
+  .nav-brand-sub {{ font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--nav-muted); margin-top: 4px; letter-spacing: 0.08em; }}
+  .nav-section {{ padding: 16px 12px 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; color: var(--nav-muted); letter-spacing: 0.18em; text-transform: uppercase; }}
+  .nav-item {{ display: flex; align-items: center; gap: 10px; padding: 8px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nav-muted); cursor: pointer; border-left: 2px solid transparent; transition: color 0.15s, background 0.15s; letter-spacing: 0.03em; }}
+  .nav-item:hover {{ color: var(--nav-active); background: rgba(17,16,8,0.04); }}
+  .nav-item.active {{ color: var(--nav-active); border-left-color: #B8922A; background: rgba(184,146,42,0.07); }}
   .nav-dot {{ width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }}
-  .nav-footer {{ margin-top: auto; padding: 16px 20px; font-size: 11px; color: var(--nav-muted); border-top: 0.5px solid rgba(255,255,255,0.06); }}
+  .nav-footer {{ margin-top: auto; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--nav-muted); border-top: 1px solid var(--border); letter-spacing: 0.05em; }}
 
   main {{ flex: 1; overflow-y: auto; padding: 36px 40px; max-width: 1100px; }}
 
   .page {{ display: none; }}
   .page.active {{ display: block; }}
 
-  h1 {{ font-size: 24px; font-weight: 500; color: var(--text); margin-bottom: 6px; }}
-  h2 {{ font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 12px; margin-top: 28px; }}
-  h3 {{ font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 8px; }}
-  p {{ color: var(--text2); font-size: 14px; line-height: 1.7; margin-bottom: 10px; }}
-  .page-sub {{ font-size: 14px; color: var(--text3); margin-bottom: 28px; }}
+  h1 {{ font-family: 'EB Garamond', Georgia, serif; font-size: 26px; font-weight: 500; color: var(--text); margin-bottom: 6px; letter-spacing: 0.01em; }}
+  h2 {{ font-family: 'EB Garamond', Georgia, serif; font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 12px; margin-top: 28px; }}
+  h3 {{ font-family: 'EB Garamond', Georgia, serif; font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 8px; }}
+  p {{ color: var(--text2); font-size: 15px; line-height: 1.7; margin-bottom: 10px; }}
+  .page-sub {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom: 28px; letter-spacing: 0.05em; }}
 
   .metrics {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 20px 0; }}
-  .metric {{ background: var(--bg2); border-radius: 8px; padding: 14px 16px; }}
-  .metric-label {{ font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }}
-  .metric-value {{ font-size: 22px; font-weight: 500; color: var(--text); }}
-  .metric-sub {{ font-size: 11px; color: var(--text3); margin-top: 2px; }}
+  .metric {{ background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }}
+  .metric-label {{ font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; }}
+  .metric-value {{ font-family: 'EB Garamond', Georgia, serif; font-size: 24px; font-weight: 500; color: var(--text); }}
+  .metric-sub {{ font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); margin-top: 2px; }}
 
-  .card {{ background: var(--bg); border: 0.5px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 16px; }}
+  .card {{ background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px 22px; margin-bottom: 16px; }}
   .card-row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }}
 
-  .badge {{ display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; }}
-  .badge-pass {{ background: var(--green-bg); color: var(--green-text); }}
+  .badge {{ display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em; }}
+  .badge-pass {{ background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }}
 
-  table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-  thead th {{ font-size: 11px; font-weight: 500; color: var(--text3); text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--border); white-space: nowrap; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+  thead th {{ font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; color: var(--text3); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; letter-spacing: 0.12em; text-transform: uppercase; }}
   th.r, td.r {{ text-align: right; }}
-  tbody tr {{ border-bottom: 0.5px solid var(--border); }}
-  tbody td {{ padding: 9px 10px; color: var(--text); vertical-align: middle; }}
-  .region-name {{ font-weight: 500; font-size: 13px; }}
+  tbody tr {{ border-bottom: 1px solid var(--border); }}
+  tbody tr:hover {{ background: rgba(17,16,8,0.02); }}
+  tbody td {{ padding: 10px 10px; color: var(--text); vertical-align: middle; }}
+  .region-name {{ font-weight: 500; font-size: 14px; }}
 
   .bar-wrap {{ display: flex; align-items: center; gap: 8px; }}
-  .bar-track {{ height: 5px; background: var(--bg3); border-radius: 3px; flex: 1; min-width: 50px; }}
-  .bar-fill {{ height: 5px; border-radius: 3px; }}
+  .bar-track {{ height: 4px; background: var(--bg3); border-radius: 2px; flex: 1; min-width: 50px; }}
+  .bar-fill {{ height: 4px; border-radius: 2px; }}
 
-  .formula {{ background: var(--bg2); border: 0.5px solid var(--border); border-radius: 8px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 13px; color: var(--text); margin: 12px 0; line-height: 1.8; }}
+  .formula {{ background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); margin: 12px 0; line-height: 1.9; }}
 
-  .note {{ background: #412402; border-left: 4px solid #854F0B; padding: 12px 16px; margin: 20px 0; font-size: 13px; color: var(--amber-text); }}
-  .meta {{ color: var(--text3); font-size: 12px; margin-top: 6px; }}
+  .note {{ background: var(--amber-bg); border-left: 3px solid #B8922A; padding: 12px 16px; margin: 20px 0; font-size: 14px; color: var(--amber-text); }}
+  .meta {{ font-family: 'JetBrains Mono', monospace; color: var(--text3); font-size: 10px; margin-top: 6px; letter-spacing: 0.05em; }}
   .filter-bar {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }}
-  select {{ font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg); color: var(--text); font-family: inherit; }}
+  select {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 10px; border: 1px solid var(--border2); border-radius: 4px; background: var(--bg); color: var(--text); }}
 </style>
 </head>
 <body>

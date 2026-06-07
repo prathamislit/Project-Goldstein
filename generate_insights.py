@@ -280,30 +280,30 @@ def build_region_insight(region: str, df: pd.DataFrame) -> dict:
 
 # ── HTML generation ───────────────────────────────────────────────────────────
 
-LABEL_COLORS = {"STABLE": "#2ECC71", "ELEVATED": "#F39C12", "CRITICAL": "#E74C3C"}
-LABEL_BG     = {"STABLE": "rgba(46,204,113,0.12)", "ELEVATED": "rgba(243,156,18,0.12)", "CRITICAL": "rgba(231,76,60,0.12)"}
+LABEL_COLORS = {"STABLE": "#2A6E2A", "ELEVATED": "#B8922A", "CRITICAL": "#8B2020"}
+LABEL_BG     = {"STABLE": "rgba(42,110,42,0.10)", "ELEVATED": "rgba(184,146,42,0.10)", "CRITICAL": "rgba(139,32,32,0.10)"}
 
-def pct_bar(value, max_val=100, color="#F39C12"):
+def pct_bar(value, max_val=100, color="#B8922A"):
     if value is None:
-        return '<div style="color:#555;font-size:11px;">N/A</div>'
+        return '<div style="font-family:\'JetBrains Mono\',monospace;color:#7A766E;font-size:11px;">N/A</div>'
     pct = min(100, max(0, (value / max_val) * 100))
     return f'''
     <div style="display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;background:#1a1e2e;border-radius:3px;height:8px;">
-        <div style="width:{pct:.0f}%;background:{color};height:8px;border-radius:3px;transition:width 0.3s;"></div>
+      <div style="flex:1;background:#E0D8C3;border-radius:2px;height:6px;">
+        <div style="width:{pct:.0f}%;background:{color};height:6px;border-radius:2px;transition:width 0.3s;"></div>
       </div>
-      <span style="font-size:12px;color:#ccc;min-width:36px;text-align:right;">{value:.1f}</span>
+      <span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#55504A;min-width:36px;text-align:right;">{value:.1f}</span>
     </div>'''
 
 def trend_badge(delta):
     if np.isnan(delta):
-        return '<span style="color:#555;">—</span>'
+        return '<span style="color:#7A766E;">—</span>'
     if delta > 2:
-        return f'<span style="color:#E74C3C;">▲ +{delta:.1f}</span>'
+        return f'<span style="color:#8B2020;">▲ +{delta:.1f}</span>'
     elif delta < -2:
-        return f'<span style="color:#2ECC71;">▼ {delta:.1f}</span>'
+        return f'<span style="color:#2A6E2A;">▼ {delta:.1f}</span>'
     else:
-        return f'<span style="color:#888;">→ {delta:+.1f}</span>'
+        return f'<span style="color:#55504A;">→ {delta:+.1f}</span>'
 
 def sparkline_html(hist14, sc_col, lc_col, color):
     if not hist14:
@@ -313,10 +313,10 @@ def sparkline_html(hist14, sc_col, lc_col, color):
     dates    = [r.get("date_str", "") for r in hist14]
     rows = ""
     for i, (v, l, d) in enumerate(zip(vals, labels, dates)):
-        bg   = "rgba(255,255,255,0.04)" if i % 2 == 0 else "transparent"
-        lc_  = LABEL_COLORS.get(str(l).upper(), "#888")
+        bg   = "rgba(17,16,8,0.03)" if i % 2 == 0 else "transparent"
+        lc_  = LABEL_COLORS.get(str(l).upper(), "#55504A")
         bar  = "█" * max(1, int(float(v) / 10)) if v else ""
-        rows += f'<tr style="background:{bg}"><td style="padding:2px 8px;color:#888;font-size:11px;">{d}</td><td style="padding:2px 8px;color:{color};font-size:11px;font-family:monospace;">{float(v):.1f}</td><td style="padding:2px 8px;"><span style="color:{lc_};font-size:10px;font-weight:700;">{l}</span></td><td style="padding:2px 8px;color:{color};font-size:10px;opacity:0.5;letter-spacing:-1px;">{bar}</td></tr>'
+        rows += f'<tr style="background:{bg}"><td style="padding:2px 8px;font-family:\'JetBrains Mono\',monospace;color:#7A766E;font-size:10px;">{d}</td><td style="padding:2px 8px;font-family:\'JetBrains Mono\',monospace;color:{color};font-size:11px;">{float(v):.1f}</td><td style="padding:2px 8px;"><span style="font-family:\'JetBrains Mono\',monospace;color:{lc_};font-size:9px;font-weight:600;letter-spacing:0.05em;">{l}</span></td><td style="padding:2px 8px;color:{color};font-size:9px;opacity:0.4;letter-spacing:-1px;">{bar}</td></tr>'
     return f'<table style="width:100%;border-collapse:collapse;">{rows}</table>'
 
 def region_card(ins: dict) -> str:
@@ -327,76 +327,76 @@ def region_card(ins: dict) -> str:
     g7d     = ins["g7d"] if not np.isnan(ins.get("g7d", float("nan"))) else float("nan")
     g30d    = ins["g30d"] if not np.isnan(ins.get("g30d", float("nan"))) else float("nan")
 
-    why_html = "".join(f'<p style="margin:0 0 8px;color:#ccc;font-size:13px;line-height:1.6;">{p}</p>' for p in ins["why_parts"])
+    why_html = "".join(f'<p style="margin:0 0 8px;color:#55504A;font-size:14px;line-height:1.65;font-family:\'EB Garamond\',Georgia,serif;">{p}</p>' for p in ins["why_parts"])
 
     # Component bars
     comp_html = ""
     if ins.get("instab") is not None:
-        comp_html += f'<div style="margin-bottom:6px;"><div style="font-size:11px;color:#888;margin-bottom:3px;">Instability Index (40%)</div>{pct_bar(ins["instab"], 100, "#E74C3C")}</div>'
+        comp_html += f'<div style="margin-bottom:8px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:0.12em;color:#7A766E;text-transform:uppercase;margin-bottom:4px;">Instability Index (40%)</div>{pct_bar(ins["instab"], 100, "#8B2020")}</div>'
     if ins.get("vol_premium") is not None:
-        comp_html += f'<div style="margin-bottom:6px;"><div style="font-size:11px;color:#888;margin-bottom:3px;">Vol Premium (40%)</div>{pct_bar(ins["vol_premium"], 100, "#F39C12")}</div>'
+        comp_html += f'<div style="margin-bottom:8px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:0.12em;color:#7A766E;text-transform:uppercase;margin-bottom:4px;">Vol Premium (40%)</div>{pct_bar(ins["vol_premium"], 100, "#B8922A")}</div>'
     if ins.get("vix_comp") is not None:
-        comp_html += f'<div style="margin-bottom:6px;"><div style="font-size:11px;color:#888;margin-bottom:3px;">VIX Component (20%)</div>{pct_bar(ins["vix_comp"], 100, "#3498DB")}</div>'
+        comp_html += f'<div style="margin-bottom:8px;"><div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:0.12em;color:#7A766E;text-transform:uppercase;margin-bottom:4px;">VIX Component (20%)</div>{pct_bar(ins["vix_comp"], 100, "#55504A")}</div>'
 
     anom_badge = ""
     if ins.get("n_anomalies_30d", 0) > 0:
-        anom_badge = f'<span style="background:#E74C3C22;border:1px solid #E74C3C44;color:#E74C3C;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:8px;">⚠ {ins["n_anomalies_30d"]} anomaly</span>'
+        anom_badge = f'<span style="background:rgba(139,32,32,0.08);border:1px solid rgba(139,32,32,0.25);color:#8B2020;padding:2px 8px;border-radius:4px;font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:0.05em;margin-left:8px;">⚠ {ins["n_anomalies_30d"]} anomaly</span>'
 
     sparkline = sparkline_html(ins["hist14"], ins["sc_col"], ins["lc_col"] or "GRPS_label", clr)
 
     return f'''
-<div class="region-card" id="card-{ins["region"]}" style="background:#0f1220;border:1px solid {clr}33;border-radius:12px;padding:24px;margin-bottom:24px;border-left:3px solid {clr};">
+<div class="region-card" id="card-{ins["region"]}" style="background:#faf9f5;border:1px solid rgba(17,16,8,.10);border-radius:8px;padding:24px;margin-bottom:20px;border-left:3px solid {clr};">
   <!-- Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
     <div>
-      <h2 style="margin:0;font-size:18px;color:{clr};font-weight:700;letter-spacing:0.5px;">{ins["label_display"]}</h2>
-      <span style="font-size:11px;color:#666;">ETF proxy: <span style="color:#aaa;font-weight:600;">{ins["etf"]}</span> &nbsp;·&nbsp; as of {ins["as_of"]}</span>
+      <h2 style="margin:0;font-family:\'EB Garamond\',Georgia,serif;font-size:20px;color:#111008;font-weight:500;letter-spacing:0.01em;">{ins["label_display"]}</h2>
+      <span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#7A766E;letter-spacing:0.08em;">ETF proxy: <span style="color:#55504A;font-weight:600;">{ins["etf"]}</span> &nbsp;·&nbsp; as of {ins["as_of"]}</span>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:32px;font-weight:800;color:{clr};line-height:1;">{ins["grps"]:.1f}</div>
-      <div style="background:{lbg};border:1px solid {lc}44;color:{lc};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;margin-top:4px;display:inline-block;">{lbl}</div>
+      <div style="font-family:\'EB Garamond\',Georgia,serif;font-size:36px;font-weight:500;color:{clr};line-height:1;">{ins["grps"]:.1f}</div>
+      <div style="background:{lbg};border:1px solid {lc}55;color:{lc};padding:3px 10px;border-radius:4px;font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:600;letter-spacing:0.08em;margin-top:4px;display:inline-block;">{lbl}</div>
       {anom_badge}
     </div>
   </div>
 
   <!-- Trend + Range -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
-    <div style="background:#0d1018;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:10px;color:#666;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">7-Day Δ</div>
-      <div style="font-size:16px;">{trend_badge(g7d)}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div style="background:#EDE5D0;border:1px solid rgba(17,16,8,.08);border-radius:6px;padding:10px;text-align:center;">
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.12em;">7-Day Δ</div>
+      <div style="font-size:15px;">{trend_badge(g7d)}</div>
     </div>
-    <div style="background:#0d1018;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:10px;color:#666;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">30-Day Δ</div>
-      <div style="font-size:16px;">{trend_badge(g30d)}</div>
+    <div style="background:#EDE5D0;border:1px solid rgba(17,16,8,.08);border-radius:6px;padding:10px;text-align:center;">
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.12em;">30-Day Δ</div>
+      <div style="font-size:15px;">{trend_badge(g30d)}</div>
     </div>
-    <div style="background:#0d1018;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:10px;color:#666;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">90-Day Range</div>
-      <div style="font-size:12px;color:#aaa;">{ins["grps90_min"]:.0f} – {ins["grps90_max"]:.0f}</div>
+    <div style="background:#EDE5D0;border:1px solid rgba(17,16,8,.08);border-radius:6px;padding:10px;text-align:center;">
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.12em;">90-Day Range</div>
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#55504A;">{ins["grps90_min"]:.0f} – {ins["grps90_max"]:.0f}</div>
     </div>
   </div>
 
   <!-- Two-column layout: components + history -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
     <div>
-      <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Score Components</div>
-      {comp_html if comp_html else '<div style="color:#555;font-size:12px;">Component data not available</div>'}
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;">Score Components</div>
+      {comp_html if comp_html else '<div style="font-family:\'JetBrains Mono\',monospace;color:#7A766E;font-size:11px;">Component data not available</div>'}
     </div>
     <div>
-      <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">14-Day History</div>
+      <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;">14-Day History</div>
       {sparkline}
     </div>
   </div>
 
   <!-- Why section -->
-  <div style="background:#0d1018;border-radius:8px;padding:16px;margin-bottom:16px;border-left:2px solid {clr}66;">
-    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Why is the score at this level?</div>
+  <div style="background:#EDE5D0;border-radius:6px;padding:16px;margin-bottom:12px;border-left:2px solid {clr}88;">
+    <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;">Why is the score at this level?</div>
     {why_html}
   </div>
 
   <!-- Effects section -->
-  <div style="background:#0d1018;border-radius:8px;padding:16px;border-left:2px solid {lc}66;">
-    <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Possible Market Effects · {lbl}</div>
-    <p style="margin:0;color:#bbb;font-size:13px;line-height:1.6;">{ins["effects_text"]}</p>
+  <div style="background:#EDE5D0;border-radius:6px;padding:16px;border-left:2px solid {lc}88;">
+    <div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:8px;">Possible Market Effects · {lbl}</div>
+    <p style="margin:0;font-family:\'EB Garamond\',Georgia,serif;color:#55504A;font-size:15px;line-height:1.65;">{ins["effects_text"]}</p>
   </div>
 </div>'''
 
@@ -412,19 +412,19 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
 
     # Global summary bar
     def mini_card(ins):
-        lc = LABEL_COLORS.get(ins["label"], "#888")
+        lc = LABEL_COLORS.get(ins["label"], "#55504A")
         return f'''<a href="#card-{ins["region"]}" style="text-decoration:none;">
-          <div style="background:#0f1220;border:1px solid {ins["color"]}33;border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='{ins["color"]}'" onmouseout="this.style.borderColor='{ins["color"]}33'">
-            <div style="font-size:11px;color:{ins["color"]};font-weight:700;margin-bottom:4px;">{ins["label_display"]}</div>
-            <div style="font-size:20px;font-weight:800;color:{ins["color"]};line-height:1;">{ins["grps"]:.1f}</div>
-            <div style="font-size:9px;color:{lc};font-weight:700;margin-top:4px;">{ins["label"]}</div>
+          <div style="background:#faf9f5;border:1px solid rgba(17,16,8,.10);border-left:3px solid {ins["color"]};border-radius:6px;padding:10px 14px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#EDE5D0'" onmouseout="this.style.background='#faf9f5'">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:{ins["color"]};font-weight:600;letter-spacing:0.08em;margin-bottom:5px;">{ins["label_display"]}</div>
+            <div style="font-family:'EB Garamond',Georgia,serif;font-size:24px;font-weight:500;color:{ins["color"]};line-height:1;">{ins["grps"]:.1f}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:{lc};font-weight:600;letter-spacing:0.06em;margin-top:5px;">{ins["label"]}</div>
           </div></a>'''
 
     overview_cards = "".join(mini_card(i) for i in all_sorted)
 
     # Nav links
     nav_links = "".join(
-        f'<a href="#card-{i["region"]}" style="color:{i["color"]};font-size:12px;text-decoration:none;padding:4px 10px;border-radius:20px;border:1px solid {i["color"]}44;white-space:nowrap;" onmouseover="this.style.background=\'{i["color"]}22\'" onmouseout="this.style.background=\'transparent\'">{i["label_display"]}</a> '
+        f'<a href="#card-{i["region"]}" style="font-family:\'JetBrains Mono\',monospace;color:{i["color"]};font-size:9px;letter-spacing:0.08em;text-decoration:none;padding:3px 10px;border-radius:4px;border:1px solid {i["color"]}55;white-space:nowrap;" onmouseover="this.style.background=\'{i["color"]}18\'" onmouseout="this.style.background=\'transparent\'">{i["label_display"]}</a> '
         for i in all_sorted
     )
 
@@ -432,27 +432,26 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
     detail_cards = "".join(region_card(i) for i in all_sorted)
 
     interpretation_guide = '''
-    <div style="background:linear-gradient(135deg,#0d1a2e,#0f1220);border:1px solid #2a3a5e;border-radius:12px;padding:24px;margin-bottom:32px;">
+    <div style="background:#EDE5D0;border:1px solid rgba(17,16,8,.10);border-radius:8px;padding:24px;margin-bottom:32px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-        <span style="font-size:20px;">🔍</span>
-        <h2 style="margin:0;color:#7B9FFF;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Signal Interpretation Guide</h2>
+        <h2 style="margin:0;font-family:'JetBrains Mono',monospace;color:#111008;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.20em;">Signal Interpretation Guide</h2>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
         <div>
-          <p style="color:#bbb;font-size:13px;line-height:1.7;margin:0 0 12px;">
-            <strong style="color:#e8e8e8;">GRPS is a risk management signal, not directional alpha.</strong>
+          <p style="font-family:'EB Garamond',Georgia,serif;color:#55504A;font-size:15px;line-height:1.7;margin:0 0 12px;">
+            <strong style="color:#111008;">GRPS is a risk management signal, not directional alpha.</strong>
             An ELEVATED score means geopolitical variance pressure is building in that region — it does not predict whether the linked ETF goes up or down. It quantifies the magnitude of risk, not its direction.
           </p>
-          <p style="color:#bbb;font-size:13px;line-height:1.7;margin:0;">
-            A fund using GRPS=ELEVATED for Hormuz to buy USO OTM puts is not arbitraging a pricing inefficiency — they are sizing a hedge. This is why <strong style="color:#e8e8e8;">GRPS does not decay upon commercial publication</strong>: the consuming desk is not trading against the signal.
+          <p style="font-family:'EB Garamond',Georgia,serif;color:#55504A;font-size:15px;line-height:1.7;margin:0;">
+            A fund using GRPS=ELEVATED for Hormuz to buy USO OTM puts is not arbitraging a pricing inefficiency — they are sizing a hedge. This is why <strong style="color:#111008;">GRPS does not decay upon commercial publication</strong>: the consuming desk is not trading against the signal.
           </p>
         </div>
         <div>
-          <div style="background:#0a0f1a;border-radius:8px;padding:14px;">
-            <div style="margin-bottom:8px;"><span style="color:#2ECC71;font-weight:700;">STABLE (0–33)</span> <span style="color:#888;font-size:12px;margin-left:8px;">Event flow cooperative, minimal variance pressure</span></div>
-            <div style="margin-bottom:8px;"><span style="color:#F39C12;font-weight:700;">ELEVATED (33–66)</span> <span style="color:#888;font-size:12px;margin-left:8px;">Geopolitical variance detectable, above baseline</span></div>
-            <div style="margin-bottom:8px;"><span style="color:#E74C3C;font-weight:700;">CRITICAL (66–100)</span> <span style="color:#888;font-size:12px;margin-left:8px;">Crisis-level pressure; all components simultaneously elevated</span></div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #1a2030;font-size:11px;color:#666;">
+          <div style="background:#faf9f5;border:1px solid rgba(17,16,8,.08);border-radius:6px;padding:16px;">
+            <div style="margin-bottom:10px;"><span style="font-family:'JetBrains Mono',monospace;color:#2A6E2A;font-size:10px;font-weight:600;letter-spacing:0.05em;">STABLE (0–33)</span> <span style="font-family:'EB Garamond',Georgia,serif;color:#55504A;font-size:13px;margin-left:8px;">Event flow cooperative, minimal variance pressure</span></div>
+            <div style="margin-bottom:10px;"><span style="font-family:'JetBrains Mono',monospace;color:#B8922A;font-size:10px;font-weight:600;letter-spacing:0.05em;">ELEVATED (33–66)</span> <span style="font-family:'EB Garamond',Georgia,serif;color:#55504A;font-size:13px;margin-left:8px;">Geopolitical variance detectable, above baseline</span></div>
+            <div style="margin-bottom:10px;"><span style="font-family:'JetBrains Mono',monospace;color:#8B2020;font-size:10px;font-weight:600;letter-spacing:0.05em;">CRITICAL (66–100)</span> <span style="font-family:'EB Garamond',Georgia,serif;color:#55504A;font-size:13px;margin-left:8px;">Crisis-level pressure; all components simultaneously elevated</span></div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(17,16,8,.08);font-family:'JetBrains Mono',monospace;font-size:9px;color:#7A766E;letter-spacing:0.05em;line-height:1.8;">
               Components: Instability Index (40%) + Vol Premium (40%) + VIX Component (20%)<br>
               Data sources: GDELT BigQuery · yfinance · CBOE VIX · [ACLED when configured]
             </div>
@@ -467,25 +466,27 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Goldstein — Intelligence Brief</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{
-      background: #080c14;
-      color: #e8e8e8;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #faf9f5;
+      color: #111008;
+      font-family: 'EB Garamond', Georgia, serif;
       min-height: 100vh;
       padding: 0;
+      -webkit-font-smoothing: antialiased;
     }}
-    ::-webkit-scrollbar {{ width: 6px; }}
-    ::-webkit-scrollbar-track {{ background: #0a0f1a; }}
-    ::-webkit-scrollbar-thumb {{ background: #2a3a5e; border-radius: 3px; }}
+    ::-webkit-scrollbar {{ width: 5px; }}
+    ::-webkit-scrollbar-track {{ background: #faf9f5; }}
+    ::-webkit-scrollbar-thumb {{ background: #E0D8C3; border-radius: 3px; }}
     .sticky-nav {{
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(8,12,20,0.95);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid #1a2030;
+      background: rgba(237,229,208,0.95);
+      backdrop-filter: blur(14px) saturate(1.1);
+      border-bottom: 1px solid rgba(17,16,8,.10);
       padding: 10px 32px;
       display: flex;
       gap: 8px;
@@ -493,13 +494,16 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
       align-items: center;
     }}
     .sticky-nav .brand {{
-      font-size: 13px;
-      font-weight: 700;
-      color: #7B9FFF;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #111008;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
       margin-right: 16px;
       white-space: nowrap;
     }}
-    a:hover {{ opacity: 0.85; }}
+    a:hover {{ opacity: 0.80; }}
     @media (max-width: 768px) {{
       .region-card div[style*="grid-template-columns: 1fr 1fr"] {{
         grid-template-columns: 1fr !important;
@@ -519,24 +523,24 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
 <div style="max-width:1100px;margin:0 auto;padding:32px 24px;">
 
   <!-- Header -->
-  <div style="margin-bottom:32px;">
+  <div style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid rgba(17,16,8,.10);">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
       <div>
-        <h1 style="font-size:28px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:4px;">
-          ◆ PROJECT GOLDSTEIN
+        <h1 style="font-family:'EB Garamond',Georgia,serif;font-size:30px;font-weight:500;color:#111008;letter-spacing:0.01em;margin-bottom:4px;">
+          Project Goldstein
         </h1>
-        <p style="color:#666;font-size:14px;">Geopolitical Intelligence Brief · {generated_at}</p>
+        <p style="font-family:'JetBrains Mono',monospace;color:#7A766E;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Geopolitical Intelligence Brief · {generated_at}</p>
       </div>
-      <div style="display:flex;gap:16px;text-align:center;">
-        <div><div style="font-size:24px;font-weight:800;color:#E74C3C;">{n_critical}</div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;">Critical</div></div>
-        <div><div style="font-size:24px;font-weight:800;color:#F39C12;">{n_elevated}</div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;">Elevated</div></div>
-        <div><div style="font-size:24px;font-weight:800;color:#2ECC71;">{n_stable}</div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;">Stable</div></div>
+      <div style="display:flex;gap:20px;text-align:center;">
+        <div><div style="font-family:'EB Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#8B2020;">{n_critical}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.12em;">Critical</div></div>
+        <div><div style="font-family:'EB Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#B8922A;">{n_elevated}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.12em;">Elevated</div></div>
+        <div><div style="font-family:'EB Garamond',Georgia,serif;font-size:28px;font-weight:500;color:#2A6E2A;">{n_stable}</div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#7A766E;text-transform:uppercase;letter-spacing:0.12em;">Stable</div></div>
       </div>
     </div>
   </div>
 
   <!-- Overview grid -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:32px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:32px;">
     {overview_cards}
   </div>
 
@@ -544,26 +548,20 @@ def build_html(insights: list, generated_at: str, args_days: int) -> str:
   {interpretation_guide}
 
   <!-- Region deep-dives -->
-  <h2 style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1a2030;">Regional Intelligence — Elevated & Critical First</h2>
+  <h2 style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#7A766E;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid rgba(17,16,8,.10);">Regional Intelligence — Elevated &amp; Critical First</h2>
 
   {detail_cards}
 
   <!-- Footer -->
-  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #1a2030;text-align:center;">
-    <p style="color:#444;font-size:11px;line-height:1.8;">
-      COMMERCIAL LICENSING & ALPHA DECAY NOTE: GRPS is natively a risk management and volatility premium identification tool,
-      NOT a directional alpha signal. Alpha elements invariably decay upon commercial publicity; risk management factors persist
-      as they price systemic hedge costs rather than predictive excess returns.
-      Pricing Tiers: Quantitative API Access ($X/mo per region), Dashboard Risk Monitoring ($Y/mo), Institutional Research License ($Z/yr).
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(17,16,8,.10);text-align:center;">
+    <p style="font-family:'JetBrains Mono',monospace;color:#7A766E;font-size:9px;line-height:1.9;letter-spacing:0.04em;">
+      GRPS is a risk management signal, not directional alpha. Alpha decays on publication; variance premia persist.
     </p>
-    <p style="color:#E74C3C;font-size:11px;margin-top:8px;">
-      REGULATORY SAFE HARBOR: Project Goldstein GRPS constitutes strictly informational data output.
-      The platform provides geopolitical analysis and mathematical volatility premiums, and does explicitly NOT
-      constitute investment advice under SEC Rule 202(a)(11).
+    <p style="font-family:'JetBrains Mono',monospace;color:#8B2020;font-size:9px;margin-top:6px;letter-spacing:0.04em;">
+      REGULATORY SAFE HARBOR: GRPS constitutes strictly informational data output and does NOT constitute investment advice under SEC Rule 202(a)(11).
     </p>
-    <p style="color:#333;font-size:10px;margin-top:12px;">
-      Project Goldstein © {datetime.now().year} · Quantamental Geopolitical Volatility Signal ·
-      Generated {generated_at} · {args_days}-day lookback window
+    <p style="font-family:'JetBrains Mono',monospace;color:#7A766E;font-size:9px;margin-top:10px;letter-spacing:0.04em;">
+      Project Goldstein © {datetime.now().year} · Generated {generated_at} · {args_days}-day lookback
     </p>
   </div>
 
