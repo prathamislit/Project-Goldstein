@@ -32,19 +32,19 @@ SCORES_PATH = lambda r: f"outputs/daily_scores_{r}.csv"
 MASTER_PATH = lambda r: f"data/master_dataset_clean_{r}.csv"
 
 REGIME_META = {
-    "STABLE":   {"color": "#66BB6A", "bg": "rgba(102,187,106,0.12)", "border": "rgba(102,187,106,0.35)"},
-    "ELEVATED": {"color": "#FFA726", "bg": "rgba(255,167,38,0.12)",  "border": "rgba(255,167,38,0.35)"},
-    "CRITICAL": {"color": "#EF5350", "bg": "rgba(239,83,80,0.12)",   "border": "rgba(239,83,80,0.35)"},
-    "N/A":      {"color": "#555",    "bg": "rgba(80,80,80,0.1)",     "border": "rgba(80,80,80,0.2)"},
+    "STABLE":   {"color": "#2A6E2A", "bg": "rgba(42,110,42,0.08)",   "border": "rgba(42,110,42,0.22)"},
+    "ELEVATED": {"color": "#8E6F1E", "bg": "rgba(184,146,42,0.08)",  "border": "rgba(184,146,42,0.22)"},
+    "CRITICAL": {"color": "#8B2020", "bg": "rgba(139,32,32,0.08)",   "border": "rgba(139,32,32,0.22)"},
+    "N/A":      {"color": "#7A766E", "bg": "rgba(17,16,8,0.05)",     "border": "rgba(17,16,8,0.12)"},
 }
 
-BG       = "#07071a"
-CARD_BG  = "#0e0e28"
-CARD_BG2 = "#12122e"
-BORDER   = "#1e1e42"
-TEXT_PRI = "#e8e8f0"
-TEXT_SEC = "#6b6b8a"
-GRID_CLR = "#1a1a38"
+BG       = "#faf9f5"
+CARD_BG  = "#EDE5D0"
+CARD_BG2 = "#E0D8C3"
+BORDER   = "rgba(17,16,8,0.12)"
+TEXT_PRI = "#111008"
+TEXT_SEC = "#55504A"
+GRID_CLR = "rgba(17,16,8,0.07)"
 
 DATE_PRESETS = [
     ("1M",  30),
@@ -138,21 +138,21 @@ def make_gauge(grps, regime, color):
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=val,
-        number={"font": {"size": 40, "color": TEXT_PRI, "family": "Inter, Arial"}},
+        number={"font": {"size": 40, "color": TEXT_PRI, "family": "EB Garamond, Georgia, serif"}},
         gauge={
             "axis": {
                 "range": [0, 100],
                 "tickvals": [0, 25, 50, 75, 100],
-                "tickfont": {"color": TEXT_SEC, "size": 9},
+                "tickfont": {"color": TEXT_SEC, "size": 9, "family": "JetBrains Mono, monospace"},
                 "tickcolor": BORDER, "ticklen": 4,
             },
             "bar": {"color": color, "thickness": 0.18},
             "bgcolor": "rgba(0,0,0,0)",
             "borderwidth": 0,
             "steps": [
-                {"range": [0,  33], "color": "rgba(102,187,106,0.07)"},
-                {"range": [33, 66], "color": "rgba(255,167,38,0.07)"},
-                {"range": [66, 100], "color": "rgba(239,83,80,0.07)"},
+                {"range": [0,  33], "color": "rgba(42,110,42,0.06)"},
+                {"range": [33, 66], "color": "rgba(184,146,42,0.06)"},
+                {"range": [66, 100], "color": "rgba(139,32,32,0.06)"},
             ],
             "threshold": {"line": {"color": color, "width": 4}, "thickness": 0.85, "value": val},
         },
@@ -162,7 +162,7 @@ def make_gauge(grps, regime, color):
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(t=8, b=0, l=28, r=28),
         height=170,
-        font={"color": TEXT_PRI, "family": "Inter, Arial"},
+        font={"color": TEXT_PRI, "family": "EB Garamond, Georgia, serif"},
     )
     return fig
 
@@ -229,8 +229,8 @@ def make_comparison_chart(days_filter, show_events=True):
                 y=y_pos,
                 text=f"<b>{label}</b>",
                 showarrow=False,
-                font=dict(color=evt_color, size=7.5, family="Inter, Arial"),
-                bgcolor="rgba(7,7,26,0.88)",
+                font=dict(color=evt_color, size=7.5, family="JetBrains Mono, monospace"),
+                bgcolor="rgba(237,229,208,0.95)",
                 bordercolor=evt_color,
                 borderwidth=1,
                 borderpad=4,
@@ -243,21 +243,25 @@ def make_comparison_chart(days_filter, show_events=True):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor=CARD_BG2,
-        font={"color": TEXT_PRI, "family": "Inter, Arial", "size": 11},
+        font={"color": TEXT_PRI, "family": "EB Garamond, Georgia, serif", "size": 11},
         margin=dict(t=16, b=8, l=48, r=16),
         height=290,
         legend=dict(
             orientation="h", x=1, xanchor="right", y=1.14,
-            font={"size": 10, "color": TEXT_SEC}, bgcolor="rgba(0,0,0,0)",
+            font={"size": 10, "color": TEXT_SEC, "family": "JetBrains Mono, monospace"},
+            bgcolor="rgba(0,0,0,0)",
             itemsizing="constant",
         ),
         xaxis=dict(gridcolor=GRID_CLR, showgrid=True, zeroline=False,
-                   tickfont={"color": TEXT_SEC, "size": 10}, tickformat="%b %Y"),
+                   tickfont={"color": TEXT_SEC, "size": 10, "family": "JetBrains Mono, monospace"},
+                   tickformat="%b %Y"),
         yaxis=dict(gridcolor=GRID_CLR, showgrid=True, zeroline=False,
-                   range=[0, 100], tickfont={"color": TEXT_SEC, "size": 10},
+                   range=[0, 100],
+                   tickfont={"color": TEXT_SEC, "size": 10, "family": "JetBrains Mono, monospace"},
                    title=dict(text="GRPS", font={"color": TEXT_SEC, "size": 10})),
         hovermode="x",
-        hoverlabel=dict(bgcolor=CARD_BG, font_size=12, bordercolor=BORDER),
+        hoverlabel=dict(bgcolor=CARD_BG, font_size=12, bordercolor=BORDER,
+                        font_family="JetBrains Mono, monospace"),
     )
     return fig
 
@@ -285,7 +289,7 @@ def make_detail_chart(rkey, days_filter):
         fig.add_trace(go.Scatter(
             x=df_m["date"], y=df_m[g_col],
             mode="lines", name="Goldstein",
-            line=dict(color="#4FC3F7", width=1.4, shape="spline", smoothing=0.4),
+            line=dict(color="#B8922A", width=1.4, shape="spline", smoothing=0.4),
             hovertemplate="%{x|%d %b %Y}  Goldstein: %{y:.3f}<extra></extra>",
         ), row=1, col=1)
         fig.add_hline(y=0, line=dict(color=BORDER, width=1, dash="dash"), row=1, col=1)
@@ -327,8 +331,8 @@ def make_detail_chart(rkey, days_filter):
         fig.add_trace(go.Scatter(
             x=vix_src["date"], y=vix_src[vix_col],
             mode="lines", name="VIX Z-Score",
-            line=dict(color="#FFA726", width=1.4),
-            fill="tozeroy", fillcolor="rgba(255,167,38,0.08)",
+            line=dict(color="#B8922A", width=1.4),
+            fill="tozeroy", fillcolor="rgba(184,146,42,0.08)",
             hovertemplate="%{x|%d %b %Y}  VIX z: %{y:.2f}<extra></extra>",
         ), row=3, col=1)
         fig.add_hline(y=1.5, line=dict(color="rgba(239,83,80,0.45)", width=1, dash="dot"), row=3, col=1)
@@ -336,24 +340,28 @@ def make_detail_chart(rkey, days_filter):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor=CARD_BG2,
-        font={"color": TEXT_PRI, "family": "Inter, Arial", "size": 10},
+        font={"color": TEXT_PRI, "family": "EB Garamond, Georgia, serif", "size": 10},
         margin=dict(t=28, b=20, l=55, r=16),
         height=480,
         showlegend=True,
         legend=dict(orientation="h", x=1, xanchor="right", y=1.04,
-                    bgcolor="rgba(0,0,0,0)", font={"size": 10, "color": TEXT_SEC}),
+                    bgcolor="rgba(0,0,0,0)",
+                    font={"size": 10, "color": TEXT_SEC, "family": "JetBrains Mono, monospace"}),
         hovermode="x unified",
-        hoverlabel=dict(bgcolor=CARD_BG, font_size=11, bordercolor=BORDER),
+        hoverlabel=dict(bgcolor=CARD_BG, font_size=11, bordercolor=BORDER,
+                        font_family="JetBrains Mono, monospace"),
     )
     for i in range(1, 4):
         fig.update_xaxes(gridcolor=GRID_CLR, showgrid=True, zeroline=False,
-                         tickfont={"color": TEXT_SEC, "size": 9},
+                         tickfont={"color": TEXT_SEC, "size": 9, "family": "JetBrains Mono, monospace"},
                          tickformat="%b %Y", row=i, col=1)
         fig.update_yaxes(gridcolor=GRID_CLR, showgrid=True, zeroline=False,
-                         tickfont={"color": TEXT_SEC, "size": 9}, row=i, col=1)
+                         tickfont={"color": TEXT_SEC, "size": 9, "family": "JetBrains Mono, monospace"},
+                         row=i, col=1)
     for ann in fig.layout.annotations:
-        ann.font.color = TEXT_SEC
-        ann.font.size  = 10
+        ann.font.color  = TEXT_SEC
+        ann.font.size   = 10
+        ann.font.family = "JetBrains Mono, monospace"
     return fig
 
 # ── UI helpers ────────────────────────────────────────────────────────────────
@@ -370,12 +378,13 @@ def regime_badge(regime):
 def date_btn(label, value, active_val):
     is_active = (value == active_val)
     return html.Button(label, id={"type": "date-btn", "index": value}, n_clicks=0, style={
-        "background":   CARD_BG if not is_active else "#1e1e50",
-        "border":       f"1px solid {'#4FC3F7' if is_active else BORDER}",
-        "color":        "#4FC3F7" if is_active else TEXT_SEC,
-        "borderRadius": "6px",
+        "background":   "#E0D8C3" if not is_active else "#111008",
+        "border":       f"1px solid {'#111008' if is_active else BORDER}",
+        "color":        "#faf9f5" if is_active else TEXT_SEC,
+        "borderRadius": "4px",
         "padding":      "5px 14px",
         "fontSize":     "11px",
+        "fontFamily":   "JetBrains Mono, monospace",
         "fontWeight":   "600" if is_active else "400",
         "cursor":       "pointer",
         "letterSpacing":"0.5px",
@@ -386,16 +395,18 @@ def stat_tile(label, value, color):
     return html.Div([
         html.Div(label, style={
             "color": TEXT_SEC, "fontSize": "9px",
+            "fontFamily": "JetBrains Mono, monospace",
             "letterSpacing": "1px", "marginBottom": "5px",
             "textTransform": "uppercase",
         }),
         html.Div(value, style={
             "color": color, "fontSize": "19px",
-            "fontWeight": "700", "lineHeight": "1",
+            "fontFamily": "EB Garamond, Georgia, serif",
+            "fontWeight": "600", "lineHeight": "1",
         }),
     ], style={
         "background": CARD_BG, "border": f"1px solid {BORDER}",
-        "borderLeft": f"3px solid {color}", "borderRadius": "8px",
+        "borderLeft": f"3px solid {color}", "borderRadius": "6px",
         "padding": "11px 16px", "minWidth": "120px", "flex": "1",
     })
 
@@ -411,7 +422,7 @@ def _build_tabs():
                 "backgroundColor": "transparent", "color": TEXT_SEC,
                 "border": "none", "borderBottom": f"2px solid {BORDER}",
                 "padding": "10px 22px", "fontSize": "11px",
-                "fontFamily": "Inter, Arial", "cursor": "pointer",
+                "fontFamily": "JetBrains Mono, monospace", "cursor": "pointer",
             },
             selected_style={
                 "backgroundColor": "transparent",
@@ -419,7 +430,7 @@ def _build_tabs():
                 "border": "none",
                 "borderBottom": f"2px solid {REGION_META.get(rkey, {'color': '#888'})['color']}",
                 "padding": "10px 22px", "fontSize": "11px",
-                "fontFamily": "Inter, Arial", "fontWeight": "600",
+                "fontFamily": "JetBrains Mono, monospace", "fontWeight": "600",
             },
         )
         for rkey in regions
@@ -438,13 +449,13 @@ app.index_string = """<!DOCTYPE html>
 <html>
 <head>
 {%metas%}<title>{%title%}</title>{%favicon%}{%css%}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #07071a; }
+  body { background: #faf9f5; }
   ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: #07071a; }
-  ::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: #faf9f5; }
+  ::-webkit-scrollbar-thumb { background: rgba(17,16,8,0.18); border-radius: 3px; }
   button:hover { opacity: 0.85; }
 </style>
 </head>
@@ -455,26 +466,29 @@ app.layout = html.Div([
     dcc.Store(id="date-store", data=365),
 
     html.Div(style={
-        "height": "3px",
-        "background": "linear-gradient(90deg,#F5A623 0%,#4FC3F7 35%,#EF5350 65%,#AB47BC 85%,#26A69A 100%)",
+        "height": "2px",
+        "background": "linear-gradient(90deg,#B8922A 0%,#8B2020 40%,#2A6E2A 70%,#B8922A 100%)",
     }),
 
     html.Div([
         html.Div([
             html.Div([
-                html.Span("◈ ", style={"color": "#4FC3F7", "fontSize": "16px"}),
+                html.Span("◆ ", style={"color": "#B8922A", "fontSize": "16px"}),
                 html.Span("PROJECT GOLDSTEIN", style={
                     "color": TEXT_PRI, "fontSize": "17px",
-                    "fontWeight": "700", "letterSpacing": "3px",
+                    "fontFamily": "JetBrains Mono, monospace",
+                    "fontWeight": "600", "letterSpacing": "3px",
                 }),
             ]),
             html.Div("Geopolitical Risk Premium Signal  ·  Global Chokepoints",
                      style={"color": TEXT_SEC, "fontSize": "10px",
+                            "fontFamily": "JetBrains Mono, monospace",
                             "marginTop": "3px", "letterSpacing": "0.4px"}),
         ]),
 
         html.Div([
             html.Div("WINDOW", style={"color": TEXT_SEC, "fontSize": "9px",
+                                      "fontFamily": "JetBrains Mono, monospace",
                                       "letterSpacing": "1.5px", "marginBottom": "6px"}),
             html.Div(id="date-btn-row",
                      children=[date_btn(label, days, 365) for label, days in DATE_PRESETS],
@@ -500,6 +514,7 @@ app.layout = html.Div([
                 html.Div(style={"flex": "1", "height": "1px", "background": BORDER}),
                 html.Span("GRPS COMPARISON  —  ALL REGIONS", style={
                     "color": TEXT_SEC, "fontSize": "9px",
+                    "fontFamily": "JetBrains Mono, monospace",
                     "padding": "0 14px", "letterSpacing": "1.8px", "whiteSpace": "nowrap",
                 }),
                 html.Div(style={"flex": "1", "height": "1px", "background": BORDER}),
@@ -535,6 +550,7 @@ app.layout = html.Div([
                 html.Div(style={"flex": "1", "height": "1px", "background": BORDER}),
                 html.Span("REGION DRILL-DOWN", style={
                     "color": TEXT_SEC, "fontSize": "9px",
+                    "fontFamily": "JetBrains Mono, monospace",
                     "padding": "0 14px", "letterSpacing": "1.8px",
                 }),
                 html.Div(style={"flex": "1", "height": "1px", "background": BORDER}),
@@ -563,7 +579,8 @@ app.layout = html.Div([
         ),
         html.Div(
             "REGULATORY SAFE HARBOR: Project Goldstein GRPS constitutes strictly informational data output. The platform provides geopolitical analysis and mathematical volatility premiums, and does explicitly NOT constitute investment advice under SEC Rule 202(a)(11).",
-            style={"textAlign": "center", "color": "#AB47BC", "fontSize": "9px",
+            style={"textAlign": "center", "color": "#8B2020", "fontSize": "9px",
+                   "fontFamily": "JetBrains Mono, monospace",
                    "letterSpacing": "0.3px", "padding": "0 24px 12px", "maxWidth": "900px", "margin": "0 auto"}
         ),
         html.Div(
@@ -576,7 +593,7 @@ app.layout = html.Div([
 
 ], style={
     "backgroundColor": BG, "minHeight": "100vh",
-    "fontFamily": "Inter, Arial, sans-serif", "color": TEXT_PRI,
+    "fontFamily": "EB Garamond, Georgia, serif", "color": TEXT_PRI,
 })
 
 # ── Callbacks ─────────────────────────────────────────────────────────────────
@@ -632,15 +649,19 @@ def update_gauges(_):
         color  = meta["color"]
         cards.append(html.Div([
             html.Div([
-                html.Span(meta["label"], style={"color": TEXT_PRI, "fontSize": "12px", "fontWeight": "600"}),
-                html.Span(f" · {meta['etf']}", style={"color": TEXT_SEC, "fontSize": "10px"}),
+                html.Span(meta["label"], style={"color": TEXT_PRI, "fontSize": "12px",
+                                                "fontFamily": "EB Garamond, Georgia, serif",
+                                                "fontWeight": "600"}),
+                html.Span(f" · {meta['etf']}", style={"color": TEXT_SEC, "fontSize": "10px",
+                                                       "fontFamily": "JetBrains Mono, monospace"}),
             ], style={"textAlign": "center", "marginBottom": "6px"}),
             dcc.Graph(figure=make_gauge(grps, regime, color),
                       config={"displayModeBar": False}, style={"height": "170px"}),
             html.Div(regime_badge(regime),
                      style={"textAlign": "center", "marginTop": "4px", "marginBottom": "5px"}),
             html.Div(f"as of {last_date(df)}" if df is not None else "no data",
-                     style={"textAlign": "center", "color": TEXT_SEC, "fontSize": "9px"}),
+                     style={"textAlign": "center", "color": TEXT_SEC, "fontSize": "9px",
+                            "fontFamily": "JetBrains Mono, monospace"}),
         ], style={
             "flex": f"1 1 {min_w}", "minWidth": "180px",
             "background": CARD_BG, "border": f"1px solid {BORDER}",
@@ -676,8 +697,9 @@ def render_tab(rkey, days_filter):
             html.Div("◈", style={"fontSize": "28px", "color": BORDER, "marginBottom": "10px"}),
             html.Div("No data for this region.", style={"color": TEXT_SEC, "marginBottom": "6px"}),
             html.Code("bash run_all_regions.sh", style={
-                "color": "#4FC3F7", "background": CARD_BG2,
-                "padding": "5px 12px", "borderRadius": "5px", "fontSize": "11px",
+                "color": TEXT_PRI, "background": CARD_BG2,
+                "padding": "5px 12px", "borderRadius": "4px", "fontSize": "11px",
+                "fontFamily": "JetBrains Mono, monospace",
             }),
         ], style={"textAlign": "center", "padding": "50px 20px"})
 
@@ -690,8 +712,8 @@ def render_tab(rkey, days_filter):
     tiles = html.Div([
         stat_tile("Status",         regime,                            rm["color"]),
         stat_tile("GRPS Score",     f"{grps:.1f} / 100" if grps is not None else "--", color),
-        stat_tile("Goldstein WAVG", f"{g_val:.3f}"       if g_val  is not None else "--", "#4FC3F7"),
-        stat_tile("VIX Z-Score",    f"{vix_z:.2f}"       if vix_z  is not None else "--", "#FFA726"),
+        stat_tile("Goldstein WAVG", f"{g_val:.3f}"       if g_val  is not None else "--", "#B8922A"),
+        stat_tile("VIX Z-Score",    f"{vix_z:.2f}"       if vix_z  is not None else "--", "#8B2020"),
     ], style={"display": "flex", "gap": "10px", "marginBottom": "14px", "flexWrap": "wrap"})
 
     chart = html.Div(
