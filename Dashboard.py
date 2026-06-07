@@ -189,12 +189,14 @@ def make_comparison_chart(days_filter, show_events=True):
         if col is None:
             continue
         c = meta["color"]
-        # Reindex to every business day in the window so missing dates become
-        # explicit NaN — Plotly then renders them as gaps instead of straight
-        # lines spanning multiple skipped days
+        # Reindex to every business day, then forward-fill missing days.
+        # Rationale: GRPS measures a regime state, not a daily event count.
+        # If no new pipeline data arrived, the previous day's regime assessment
+        # remains valid — the geopolitical situation did not change, only the
+        # data feed was thin. Forward-fill is standard practice for risk indices.
         df = df.set_index("date").reindex(
             pd.bdate_range(df["date"].min(), df["date"].max())
-        )[col].reset_index()
+        )[[col]].ffill().reset_index()
         df.columns = ["date", col]
         fig.add_trace(go.Scatter(
             x=df["date"], y=df[col],
