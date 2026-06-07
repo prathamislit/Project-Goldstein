@@ -467,6 +467,51 @@ app.index_string = """<!DOCTYPE html>
   ::-webkit-scrollbar-track { background: #faf9f5; }
   ::-webkit-scrollbar-thumb { background: rgba(17,16,8,0.18); border-radius: 3px; }
   button:hover { opacity: 0.85; }
+
+  /* ── Info tooltip ── */
+  .info-anchor {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%;
+    background: rgba(17,16,8,0.08); border: 1px solid rgba(17,16,8,0.18);
+    color: #55504A; font-size: 9px; font-family: 'JetBrains Mono', monospace;
+    cursor: default; margin-left: 8px; vertical-align: middle;
+    position: relative; flex-shrink: 0;
+  }
+  .info-anchor .info-tooltip {
+    display: none;
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%);
+    background: #EDE5D0; border: 1px solid rgba(17,16,8,0.18);
+    border-radius: 6px; padding: 12px 14px;
+    width: 320px; z-index: 999;
+    box-shadow: 0 4px 16px rgba(17,16,8,0.10);
+    pointer-events: none;
+  }
+  .info-anchor:hover .info-tooltip { display: block; }
+  .info-tooltip-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: #111008; margin-bottom: 8px;
+  }
+  .info-tooltip-body {
+    font-family: 'EB Garamond', Georgia, serif; font-size: 13px;
+    color: #55504A; line-height: 1.55;
+  }
+  .info-tooltip-body strong { color: #111008; }
+  /* caret */
+  .info-anchor .info-tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #EDE5D0;
+  }
+  .info-anchor .info-tooltip::before {
+    content: ''; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: rgba(17,16,8,0.18);
+    margin-top: 1px;
+  }
 </style>
 </head>
 <body>{%app_entry%}<footer>{%config%}{%scripts%}{%renderer%}</footer></body>
@@ -522,7 +567,21 @@ app.layout = html.Div([
         html.Div([
             html.Div([
                 html.Div(style={"flex": "1", "height": "1px", "background": BORDER}),
-                html.Span("GRPS COMPARISON  —  ALL REGIONS", style={
+                html.Span([
+                    "GRPS COMPARISON  —  ALL REGIONS",
+                    html.Span([
+                        "i",
+                        html.Div([
+                            html.Div("Methodology note", className="info-tooltip-title"),
+                            html.Div([
+                                "GRPS scores are computed on days when GDELT / ACLED return sufficient event data. On thin news days the pipeline produces no output. ",
+                                html.Strong("Missing days are forward-filled: "),
+                                "if no new data arrived, the prior regime assessment remains valid — the geopolitical situation did not change, only the data feed was thin. Forward-fill is standard practice for institutional risk indices.",
+                            ], className="info-tooltip-body"),
+                        ], className="info-tooltip"),
+                    ], className="info-anchor"),
+                ], style={
+                    "display": "inline-flex", "alignItems": "center",
                     "color": TEXT_SEC, "fontSize": "9px",
                     "fontFamily": "JetBrains Mono, monospace",
                     "padding": "0 14px", "letterSpacing": "1.8px", "whiteSpace": "nowrap",
