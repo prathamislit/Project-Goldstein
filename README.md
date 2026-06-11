@@ -37,16 +37,17 @@ All coefficients fitted on 2022–2026 data. p < 0.001 across validated regions.
 | Eastern Europe | XME | **0.918** | < 0.001 |
 | Taiwan Strait | SOXX | **0.897** | < 0.001 |
 
-Remaining 9 regions are live. Coefficients will be published after their 90-day post-warmup validation window closes.
+The remaining 9 regions are now live and fully backfilled (2022–2026, ~1,090 trading days each, passing QC). Their γ coefficients will be published after the 90-day post-warmup validation window closes.
 
-**Backtest (threshold-crossing event study, 21-day forward window, 12 regions):**
+**Backtest (threshold-crossing event study, all 12 regions, 332 crossing events, June 2026 run):**
 
-| Metric | Result |
-|---|---|
-| Avg hit rate (vol > 75th pct post-crossing) | 64.4% |
-| Avg false positive rate | 29.2% |
-| Avg Spearman IC | 0.23 |
-| Total validated crossing events | 323 |
+| Forward window | Avg Spearman IC | Regions significant at p < 0.05 |
+|---|---|---|
+| 5-day | 0.11 | Taiwan Strait (IC 0.48, p = 0.015) |
+| 10-day | 0.09 | Sahel / West Africa (IC 0.47, p = 0.009) |
+| 21-day | 0.03 | — |
+
+IC is the Spearman rank correlation between GRPS at the threshold crossing and forward realized volatility of the region's ETF proxy. On the expanded 12-region set, predictive power is concentrated at the 5–10 day horizon; the 21-day signal from the original 3-region validation has not yet replicated across all regions and remains under evaluation.
 
 Warm-up period (first 252 trading days per region) excluded from all validation.
 
