@@ -9,7 +9,11 @@ and all available history, computing:
   1. Threshold-crossing log — every STABLE→ELEVATED transition per region
   2. Forward realized vol — ETF vol in 5, 10, 21 trading days post-crossing
   3. Hit rate — fraction of crossings where forward vol exceeded the 75th pct
-  4. False positive rate — fraction where vol remained below the 50th pct
+     of the REGION-LEVEL baseline forward-vol distribution (all post-warmup
+     non-crossing days), NOT of the event sample itself
+  4. False positive rate — fraction of non-crossing baseline days whose
+     forward vol exceeded the same baseline 75th pct (the base rate the
+     hit rate must beat; ≈25% by construction)
   5. Information coefficient — Spearman rank corr(GRPS level, forward vol)
   6. Lead time — average days from GRPS crossing to peak forward vol
   7. HTML report — exportable evidence table for investor/YC presentations
@@ -39,9 +43,9 @@ import config
 
 STABLE_THRESHOLD  = 33.0   # GRPS crossing this boundary = STABLE→ELEVATED
 FORWARD_WINDOWS   = [5, 10, 21]    # trading days post-crossing to measure vol
-HIT_RATE_PCT      = 0.75   # realized vol exceeds this percentile → "hit"
-FP_PCT            = 0.50   # realized vol below this percentile → "false positive"
+HIT_RATE_PCT      = 0.75   # baseline percentile forward vol must exceed → "hit"
 COOLDOWN_DAYS     = 21     # min days between counted crossings (avoids recounting same event)
+MIN_BASELINE_N    = 60     # min non-crossing days required to use them as the baseline
 
 
 # ─── Core: load scores file ──────────────────────────────────────────────────
@@ -129,25 +133,82 @@ def compute_forward_vol(master_df: pd.DataFrame, sector_etf: str,
     return df_after[ret_col].std() * np.sqrt(252)
 
 
-# ─── Step 3: Build event study table ─────────────────────────────────────────
+# ─── Step 3: Region-level baseline forward-vol distribution ──────────────────
 
-def build_event_study(region: str) -> pd.DataFrame:
+def compute_baselines(scores_df: pd.DataFrame, master_df: pd.DataFrame,
+                      sector_etf: str) -> dict:
+    """
+    Build the region-level baseline forward-vol distribution for each window.
+
+    The old logic computed the hit/false-positive percentiles from the
+    crossing-event sample itself, which made hit_rate ≈ 25% and fp_rate ≈ 50%
+    true by construction. Instead, the baseline here is the forward realized
+    vol measured from EVERY post-warmup score date (scores_df is already
+    warm-up-filtered by load_scores):
+
+      - preferred baseline sample: non-crossing days (GRPS < STABLE_THRESHOLD),
+        i.e. days when the system was NOT signalling — what "normal" looks like
+      - fallback when too few non-crossing days exist: all post-warmup days,
+        in which case false_positive_rate is reported as NA because there is
+        no clean non-signal sample to measure it on
+
+    Returns {window: {baseline_p75_vol, baseline_sample_n, baseline_kind,
+                      false_positive_rate, false_positive_sample_n}}.
+    """
+    ret_col = f"{sector_etf}_log_return"
+    if ret_col not in master_df.columns:
+        return {}
+
+    m = (master_df[["date", ret_col]].dropna()
+         .sort_values("date").reset_index(drop=True))
+
+    baselines = {}
+    for w in FORWARD_WINDOWS:
+        # forward vol anchored at day t = vol over the w trading days AFTER t,
+        # matching compute_forward_vol's "date > crossing_date" convention
+        fwd = m[ret_col].rolling(w).std().shift(-w) * np.sqrt(252)
+        fwd_df = pd.DataFrame({"date": m["date"], "fwd_vol": fwd})
+
+        merged = (scores_df[["date", "GRPS"]]
+                  .merge(fwd_df, on="date", how="inner")
+                  .dropna(subset=["fwd_vol"]))
+        if merged.empty:
+            continue
+
+        non_crossing = merged[merged["GRPS"] < STABLE_THRESHOLD]
+        if len(non_crossing) >= MIN_BASELINE_N:
+            baseline, kind = non_crossing, "non_crossing"
+        else:
+            baseline, kind = merged, "all_post_warmup"
+
+        p75 = baseline["fwd_vol"].quantile(HIT_RATE_PCT)
+
+        if kind == "non_crossing":
+            fp_rate = float((non_crossing["fwd_vol"] > p75).mean())
+            fp_n = len(non_crossing)
+        else:
+            # no clean non-signal sample → FP rate is not measurable
+            fp_rate, fp_n = None, 0
+
+        baselines[w] = {
+            "baseline_p75_vol":        round(float(p75), 4),
+            "baseline_sample_n":       len(baseline),
+            "baseline_kind":           kind,
+            "false_positive_rate":     round(fp_rate, 3) if fp_rate is not None else None,
+            "false_positive_sample_n": fp_n,
+        }
+
+    return baselines
+
+
+# ─── Step 4: Build event study table ─────────────────────────────────────────
+
+def build_event_study(region: str, scores_df: pd.DataFrame,
+                      master_df: pd.DataFrame, sector_etf: str) -> pd.DataFrame:
     """
     Full event study for one region.
     Returns a DataFrame with one row per crossing event.
     """
-    scores_df = load_scores(region)
-    if scores_df is None or scores_df.empty:
-        return pd.DataFrame()
-
-    master_df = load_master(region)
-    if master_df is None:
-        print(f"[backtest] {region}: master dataset not found — cannot compute forward vol.")
-        return pd.DataFrame()
-
-    region_cfg = config.REGIONS.get(region, {})
-    sector_etf = region_cfg.get("sector_etf", "")
-
     crossings = find_crossings(scores_df)
     if crossings.empty:
         print(f"[backtest] {region}: no STABLE→ELEVATED crossings found.")
@@ -171,12 +232,12 @@ def build_event_study(region: str) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-# ─── Step 4: Compute statistics ──────────────────────────────────────────────
+# ─── Step 5: Compute statistics ──────────────────────────────────────────────
 
-def compute_stats(event_df: pd.DataFrame) -> dict:
+def compute_stats(event_df: pd.DataFrame, baselines: dict) -> dict:
     """
-    Compute hit rate, false positive rate, and information coefficient
-    for a given event study DataFrame.
+    Compute hit rate (vs the region-level baseline), false positive rate,
+    and information coefficient for a given event study DataFrame.
     """
     if event_df.empty:
         return {}
@@ -191,28 +252,29 @@ def compute_stats(event_df: pd.DataFrame) -> dict:
         if len(valid) < 3:
             continue
 
-        vol_series  = valid[col]
-        p75 = vol_series.quantile(HIT_RATE_PCT)
-        p50 = vol_series.quantile(FP_PCT)
-
-        hit_rate = (vol_series > p75).mean()
-        fp_rate  = (vol_series < p50).mean()
         ic, ic_pvalue = stats.spearmanr(valid["grps_at_crossing"], valid[col])
 
+        b = baselines.get(w)
+        if b is not None:
+            hit_rate = float((valid[col] > b["baseline_p75_vol"]).mean())
+        else:
+            hit_rate = None
+
         stats_out[f"{w}d"] = {
-            "n_events":  len(valid),
-            "hit_rate":  round(hit_rate, 3),
-            "fp_rate":   round(fp_rate, 3),
-            "ic":        round(ic, 3),
-            "ic_pvalue": round(ic_pvalue, 3),
-            "p75_vol":   round(p75, 4),
-            "p50_vol":   round(p50, 4),
+            "n_events":                len(valid),
+            "baseline_p75_vol":        b["baseline_p75_vol"] if b else None,
+            "baseline_sample_n":       b["baseline_sample_n"] if b else 0,
+            "event_hit_rate":          round(hit_rate, 3) if hit_rate is not None else None,
+            "false_positive_rate":     b["false_positive_rate"] if b else None,
+            "false_positive_sample_n": b["false_positive_sample_n"] if b else 0,
+            "ic":                      round(ic, 3),
+            "ic_pvalue":               round(ic_pvalue, 3),
         }
 
     return stats_out
 
 
-# ─── Step 5: Run all regions ─────────────────────────────────────────────────
+# ─── Step 6: Run all regions ─────────────────────────────────────────────────
 
 def run_backtest(regions: list[str] = None, save: bool = True,
                  export_html: bool = False) -> pd.DataFrame:
@@ -232,30 +294,49 @@ def run_backtest(regions: list[str] = None, save: bool = True,
         print(f"[backtest] Processing: {region}")
         print(f"{'─'*50}")
 
-        event_df = build_event_study(region)
+        scores_df = load_scores(region)
+        if scores_df is None or scores_df.empty:
+            continue
+
+        master_df = load_master(region)
+        if master_df is None:
+            print(f"[backtest] {region}: master dataset not found — cannot compute forward vol.")
+            continue
+
+        region_cfg = config.REGIONS.get(region, {})
+        sector_etf = region_cfg.get("sector_etf", "")
+
+        event_df = build_event_study(region, scores_df, master_df, sector_etf)
         if event_df.empty:
             continue
 
         all_events.append(event_df)
-        region_stats = compute_stats(event_df)
+        baselines = compute_baselines(scores_df, master_df, sector_etf)
+        region_stats = compute_stats(event_df, baselines)
 
         for window_key, s in region_stats.items():
             summary_rows.append({
-                "region":    region,
-                "window":    window_key,
-                "n_events":  s["n_events"],
-                "hit_rate":  s["hit_rate"],
-                "fp_rate":   s["fp_rate"],
-                "ic":        s["ic"],
-                "ic_pvalue": s["ic_pvalue"],
+                "region":                  region,
+                "window":                  window_key,
+                "n_events":                s["n_events"],
+                "baseline_p75_vol":        s["baseline_p75_vol"],
+                "baseline_sample_n":       s["baseline_sample_n"],
+                "event_hit_rate":          s["event_hit_rate"],
+                "false_positive_rate":     s["false_positive_rate"],
+                "false_positive_sample_n": s["false_positive_sample_n"],
+                "ic":                      s["ic"],
+                "ic_pvalue":               s["ic_pvalue"],
             })
 
         # Print per-region summary
         print(f"\n  [backtest] {region} — statistics:")
         for window_key, s in region_stats.items():
+            hr = f"{s['event_hit_rate']:.1%}" if s["event_hit_rate"] is not None else "NA"
+            fp = f"{s['false_positive_rate']:.1%}" if s["false_positive_rate"] is not None else "NA"
             print(f"    {window_key}: n={s['n_events']}, "
-                  f"hit_rate={s['hit_rate']:.1%}, "
-                  f"fp_rate={s['fp_rate']:.1%}, "
+                  f"hit_rate={hr} (baseline p75={s['baseline_p75_vol']}, "
+                  f"n={s['baseline_sample_n']}), "
+                  f"fp_rate={fp} (n={s['false_positive_sample_n']}), "
                   f"IC={s['ic']:.3f} (p={s['ic_pvalue']:.3f})")
 
     if not all_events:
@@ -284,10 +365,10 @@ def run_backtest(regions: list[str] = None, save: bool = True,
     print("[backtest] CROSS-REGION SUMMARY — 21-day forward window")
     print(f"{'═'*60}")
     if not summary.empty:
-        tbl = summary[summary["window"] == "21d"].sort_values("hit_rate", ascending=False)
+        tbl = summary[summary["window"] == "21d"].sort_values("event_hit_rate", ascending=False)
         if not tbl.empty:
-            print(tbl[["region", "n_events", "hit_rate", "fp_rate", "ic", "ic_pvalue"]]
-                  .to_string(index=False))
+            print(tbl[["region", "n_events", "event_hit_rate", "false_positive_rate",
+                       "ic", "ic_pvalue"]].to_string(index=False))
 
     return combined
 
@@ -309,8 +390,8 @@ def _export_html(events: pd.DataFrame, summary: pd.DataFrame) -> None:
             "region": cfg.get("label", reg_id),
             "instr":  cfg.get("sector_etf", "N/A"),
             "n":      int(row["n_events"]),
-            "hr":     float(row["hit_rate"]),
-            "fp":     float(row["fp_rate"]),
+            "hr":     float(row["event_hit_rate"]) if pd.notna(row["event_hit_rate"]) else None,
+            "fp":     float(row["false_positive_rate"]) if pd.notna(row["false_positive_rate"]) else None,
             "ic":     float(row["ic"]),
             "p":      float(row["ic_pvalue"])
         })
@@ -318,7 +399,7 @@ def _export_html(events: pd.DataFrame, summary: pd.DataFrame) -> None:
     import json
     bt_json    = json.dumps(bt_list)
     sum_events = int(summary[summary["window"] == "21d"]["n_events"].sum())
-    avg_hr     = float(summary[summary["window"] == "21d"]["hit_rate"].mean())
+    avg_hr     = float(summary[summary["window"] == "21d"]["event_hit_rate"].mean())
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -426,14 +507,17 @@ def _export_html(events: pd.DataFrame, summary: pd.DataFrame) -> None:
   <div class="metrics">
     <div class="metric"><div class="metric-label">Regions monitored</div><div class="metric-value">12</div><div class="metric-sub">Strategic chokepoints</div></div>
     <div class="metric"><div class="metric-label">Validated events</div><div class="metric-value">{sum_events}</div><div class="metric-sub">Post-warmup crossings</div></div>
-    <div class="metric"><div class="metric-label">Avg hit rate</div><div class="metric-value">{(avg_hr*100):.1f}%</div><div class="metric-sub">21-day forward window</div></div>
-    <div class="metric"><div class="metric-label">Status</div><div class="metric-value" style="color:var(--green-text)">PASS</div><div class="metric-sub">All regions >60% HR</div></div>
+    <div class="metric"><div class="metric-label">Avg hit rate</div><div class="metric-value">{(avg_hr*100):.1f}%</div><div class="metric-sub">21-day window · vs ~25% base rate</div></div>
+    <div class="metric"><div class="metric-label">Base rate</div><div class="metric-value">~25%</div><div class="metric-sub">Non-crossing days above baseline p75</div></div>
   </div>
   <h2>Methodology</h2>
   <div class="note">
     <strong>Event Study Logic:</strong> Every STABLE→ELEVATED crossing (GRPS ≥ 33) across all regions
     with a {COOLDOWN_DAYS}-day cooldown. Forward realized vol computed for 5/10/21 trading days
-    post-crossing. Warm-up period (first 252 trading days) excluded from all analysis.
+    post-crossing. A crossing counts as a hit when its forward vol exceeds the 75th percentile of the
+    region's baseline forward-vol distribution (all post-warmup non-crossing days) — by construction
+    ~25% of non-signal days clear that bar, so hit rates must be read against a 25% base rate.
+    Warm-up period (first 252 trading days) excluded from all analysis.
   </div>
   <p>The goal of Project Goldstein is to quantify the "Geopolitical Risk Premium" — the excess volatility in financial instruments that occurs when regional stability breaks down. This dashboard provides the statistical proof that our threshold crossings are predictive of future market stress.</p>
 </div>
@@ -483,8 +567,10 @@ function renderBacktest() {{
   const sorted = [...btData].sort((a,b) => b[sortKey] - a[sortKey]);
   const tbody = document.getElementById('bt-tbody');
   tbody.innerHTML = sorted.map(d => {{
-    const bw = Math.round((d.hr - 0.5) / 0.5 * 100);
-    const bc = d.hr >= 0.65 ? '#639922' : '#185FA5';
+    const hr = d.hr ?? 0;
+    const bw = Math.round(hr * 100);
+    const bc = hr > 0.25 ? '#639922' : '#185FA5';
+    const above = d.hr !== null && d.fp !== null && d.hr > d.fp;
     return `<tr>
       <td><div class="region-name">${{d.region}}</div></td>
       <td style="color:var(--text3);font-size:12px;">${{d.instr}}</td>
@@ -492,13 +578,13 @@ function renderBacktest() {{
       <td>
         <div class="bar-wrap">
           <div class="bar-track"><div class="bar-fill" style="width:${{bw}}%;background:${{bc}};"></div></div>
-          <span style="font-size:12px;font-weight:500;min-width:38px;">${{(d.hr*100).toFixed(1)}}%</span>
+          <span style="font-size:12px;font-weight:500;min-width:38px;">${{d.hr === null ? 'NA' : (d.hr*100).toFixed(1)+'%'}}</span>
         </div>
       </td>
-      <td class="r" style="color:var(--text3)">${{(d.fp*100).toFixed(1)}}%</td>
+      <td class="r" style="color:var(--text3)">${{d.fp === null ? 'NA' : (d.fp*100).toFixed(1)+'%'}}</td>
       <td class="r"><b>${{d.ic.toFixed(3)}}</b></td>
       <td class="r" style="color:var(--green-text)">${{d.p.toFixed(3)}}</td>
-      <td class="r"><span class="badge badge-pass">Pass</span></td>
+      <td class="r"><span class="badge badge-pass">${{above ? 'Above base' : 'At/below base'}}</span></td>
     </tr>`;
   }}).join('');
 }}
